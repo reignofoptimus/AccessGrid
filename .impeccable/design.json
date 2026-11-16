@@ -1,0 +1,197 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-16T07:53:01.279617+00:00",
+  "title": "Design System: AccessGrid",
+  "extensions": {
+    "colorMeta": {
+      "accent": {
+        "role": "primary",
+        "displayName": "Muted yellow-green"
+      },
+      "page": {
+        "role": "neutral",
+        "displayName": "Page charcoal"
+      },
+      "rail": {
+        "role": "neutral",
+        "displayName": "Rail charcoal"
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Panel charcoal"
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Warm white"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Login display",
+        "purpose": "Login introduction only."
+      },
+      "headline": {
+        "displayName": "Workspace heading",
+        "purpose": "Contextual page titles."
+      },
+      "plate": {
+        "displayName": "Plate identifier",
+        "purpose": "Vehicle registration numbers."
+      }
+    },
+    "shadows": [
+      {
+        "name": "recognition-illustration",
+        "value": "0 20px 48px #070c0666",
+        "purpose": "Login recognition illustration only; operational panels remain flat."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease",
+        "value": "cubic-bezier(.22,1,.36,1)",
+        "purpose": "Shared easing."
+      },
+      {
+        "name": "control-transition",
+        "value": "180ms",
+        "purpose": "Color, background, border and opacity; mobile rail transform."
+      },
+      {
+        "name": "view-enter",
+        "value": "200ms",
+        "purpose": "Opacity .6 to 1; translateY(4px) to none."
+      },
+      {
+        "name": "plate-reveal",
+        "value": "240ms",
+        "purpose": "Opacity .35 to 1; translateY(6px) to none."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "prefers-reduced-motion: reduce",
+        "purpose": "Disable all animations and transitions; scroll-behavior auto."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "compact-mobile-max",
+        "value": "440px"
+      },
+      {
+        "name": "mobile-max",
+        "value": "760px"
+      },
+      {
+        "name": "stacked-max",
+        "value": "1000px"
+      },
+      {
+        "name": "compact-desktop-max",
+        "value": "1200px"
+      },
+      {
+        "name": "wide-desktop-min",
+        "value": "1600px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main action",
+      "html": "<div class=\"ds-demo\"><button class=\"ds-button ds-button-primary\">Look up plate</button></div>",
+      "css": ".ds-demo{font-family:Manrope,'Segoe UI',sans-serif;color:var(--text,#efefe9);line-height:1.6}.ds-demo button,.ds-demo input{font-family:inherit}.ds-demo button{cursor:pointer}.ds-demo button:active:not(:disabled){transform:translateY(1px)}.ds-demo button:disabled{opacity:.5;cursor:not-allowed}.ds-demo button,.ds-demo input{transition:background-color 180ms var(--ease,cubic-bezier(.22,1,.36,1)),border-color 180ms var(--ease,cubic-bezier(.22,1,.36,1)),color 180ms var(--ease,cubic-bezier(.22,1,.36,1))}.ds-demo :focus-visible{outline:2px solid var(--accent,#d4e8a0);outline-offset:4px}@media(prefers-reduced-motion:reduce){.ds-demo *{animation:none!important;transition:none!important}}.ds-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:10px 16px;border-radius:7px;border:1px solid var(--border,#303630);background:transparent;color:var(--text,#efefe9);font-size:12px;font-weight:600;white-space:nowrap;line-height:1.4}.ds-button:hover:not(:disabled){background:var(--hover,#292e29);border-color:#4b5548}.ds-button-primary{background:var(--accent,#d4e8a0);color:var(--accent-ink,#1c2415);border-color:var(--accent,#d4e8a0)}.ds-button-primary:hover:not(:disabled){background:var(--accent-hover,#e1efbd);border-color:var(--accent-hover,#e1efbd)}"
+    },
+    {
+      "name": "Outlined button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Secondary action",
+      "html": "<div class=\"ds-demo\"><button class=\"ds-button\">Cancel</button></div>",
+      "css": ".ds-demo{font-family:Manrope,'Segoe UI',sans-serif;color:var(--text,#efefe9);line-height:1.6}.ds-demo button,.ds-demo input{font-family:inherit}.ds-demo button{cursor:pointer}.ds-demo button:active:not(:disabled){transform:translateY(1px)}.ds-demo button:disabled{opacity:.5;cursor:not-allowed}.ds-demo button,.ds-demo input{transition:background-color 180ms var(--ease,cubic-bezier(.22,1,.36,1)),border-color 180ms var(--ease,cubic-bezier(.22,1,.36,1)),color 180ms var(--ease,cubic-bezier(.22,1,.36,1))}.ds-demo :focus-visible{outline:2px solid var(--accent,#d4e8a0);outline-offset:4px}@media(prefers-reduced-motion:reduce){.ds-demo *{animation:none!important;transition:none!important}}.ds-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:10px 16px;border-radius:7px;border:1px solid var(--border,#303630);background:transparent;color:var(--text,#efefe9);font-size:12px;font-weight:600;white-space:nowrap;line-height:1.4}.ds-button:hover:not(:disabled){background:var(--hover,#292e29);border-color:#4b5548}"
+    },
+    {
+      "name": "Text action",
+      "kind": "button",
+      "refersTo": "button-text",
+      "description": "Quiet contextual action.",
+      "html": "<div class=\"ds-demo\"><button class=\"ds-text-button\">View all records</button></div>",
+      "css": ".ds-demo{font-family:Manrope,'Segoe UI',sans-serif;color:var(--text,#efefe9);line-height:1.6}.ds-demo button,.ds-demo input{font-family:inherit}.ds-demo button{cursor:pointer}.ds-demo button:active:not(:disabled){transform:translateY(1px)}.ds-demo button:disabled{opacity:.5;cursor:not-allowed}.ds-demo button,.ds-demo input{transition:background-color 180ms var(--ease,cubic-bezier(.22,1,.36,1)),border-color 180ms var(--ease,cubic-bezier(.22,1,.36,1)),color 180ms var(--ease,cubic-bezier(.22,1,.36,1))}.ds-demo :focus-visible{outline:2px solid var(--accent,#d4e8a0);outline-offset:4px}@media(prefers-reduced-motion:reduce){.ds-demo *{animation:none!important;transition:none!important}}.ds-text-button{display:inline-flex;align-items:center;gap:8px;padding:4px 0;border:0;background:none;font-size:11px;color:var(--secondary,#b4bcb4);white-space:nowrap}.ds-text-button:hover{color:var(--accent,#d4e8a0)}"
+    },
+    {
+      "name": "Text field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Labeled registration field.",
+      "html": "<div class=\"ds-demo\"><label class=\"ds-field\">Vehicle number<input placeholder=\"KL 07 AB 1234\" /></label></div>",
+      "css": ".ds-demo{font-family:Manrope,'Segoe UI',sans-serif;color:var(--text,#efefe9);line-height:1.6}.ds-demo button,.ds-demo input{font-family:inherit}.ds-demo button{cursor:pointer}.ds-demo button:active:not(:disabled){transform:translateY(1px)}.ds-demo button:disabled{opacity:.5;cursor:not-allowed}.ds-demo button,.ds-demo input{transition:background-color 180ms var(--ease,cubic-bezier(.22,1,.36,1)),border-color 180ms var(--ease,cubic-bezier(.22,1,.36,1)),color 180ms var(--ease,cubic-bezier(.22,1,.36,1))}.ds-demo :focus-visible{outline:2px solid var(--accent,#d4e8a0);outline-offset:4px}@media(prefers-reduced-motion:reduce){.ds-demo *{animation:none!important;transition:none!important}}.ds-field{flex:1}.ds-field input,.ds-field select{width:100%;height:42px;background:#131613;border:1px solid #3a4434;border-radius:6px;padding:0 12px;color:var(--text,#efefe9);font-size:12px;min-width:0}.ds-field input:focus,.ds-field select:focus{border-color:var(--accent,#d4e8a0);outline:1px solid var(--accent,#d4e8a0);outline-offset:0}input::placeholder{color:#929d8b;opacity:1}"
+    },
+    {
+      "name": "Rail navigation",
+      "kind": "nav",
+      "refersTo": "navigation",
+      "description": "Selected and unselected workspace navigation.",
+      "html": "<div class=\"ds-demo\"><div class=\"ds-rail\"><nav aria-label=\"Workspace\"><button class=\"ds-active\" aria-current=\"page\">Overview<span class=\"ds-nav-indicator\"></span></button><button>Vehicles</button></nav></div></div>",
+      "css": ".ds-demo{font-family:Manrope,'Segoe UI',sans-serif;color:var(--text,#efefe9);line-height:1.6}.ds-demo button,.ds-demo input{font-family:inherit}.ds-demo button{cursor:pointer}.ds-demo button:active:not(:disabled){transform:translateY(1px)}.ds-demo button:disabled{opacity:.5;cursor:not-allowed}.ds-demo button,.ds-demo input{transition:background-color 180ms var(--ease,cubic-bezier(.22,1,.36,1)),border-color 180ms var(--ease,cubic-bezier(.22,1,.36,1)),color 180ms var(--ease,cubic-bezier(.22,1,.36,1))}.ds-demo :focus-visible{outline:2px solid var(--accent,#d4e8a0);outline-offset:4px}@media(prefers-reduced-motion:reduce){.ds-demo *{animation:none!important;transition:none!important}}.ds-rail nav{display:grid;gap:5px;padding:0 12px}.ds-rail nav button{position:relative;display:flex;align-items:center;gap:10px;min-height:40px;padding:10px 12px;border:1px solid transparent;border-radius:7px;background:none;color:#a4ada2;font-size:11px;text-align:left}.ds-rail nav button:hover{background:#20251e;color:var(--text,#efefe9)}.ds-rail nav button.ds-active{color:var(--accent,#d4e8a0);background:#252d20;border-color:#34402b}.ds-nav-indicator{margin-left:auto;width:4px;height:4px;border-radius:50%;background:var(--accent,#d4e8a0)}"
+    },
+    {
+      "name": "Positive status",
+      "kind": "chip",
+      "refersTo": "badge-positive",
+      "description": "Status text and dot; informational, not clickable.",
+      "html": "<div class=\"ds-demo\"><span class=\"ds-badge ds-badge-positive\"><i></i>Registered</span></div>",
+      "css": ".ds-demo{font-family:Manrope,'Segoe UI',sans-serif;color:var(--text,#efefe9);line-height:1.6}.ds-demo button,.ds-demo input{font-family:inherit}.ds-demo button{cursor:pointer}.ds-demo button:active:not(:disabled){transform:translateY(1px)}.ds-demo button:disabled{opacity:.5;cursor:not-allowed}.ds-demo button,.ds-demo input{transition:background-color 180ms var(--ease,cubic-bezier(.22,1,.36,1)),border-color 180ms var(--ease,cubic-bezier(.22,1,.36,1)),color 180ms var(--ease,cubic-bezier(.22,1,.36,1))}.ds-demo :focus-visible{outline:2px solid var(--accent,#d4e8a0);outline-offset:4px}@media(prefers-reduced-motion:reduce){.ds-demo *{animation:none!important;transition:none!important}}.ds-badge{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:500;line-height:1.5;color:var(--secondary,#b4bcb4);white-space:nowrap}.ds-badge i{width:5px;height:5px;border-radius:50%;background:currentColor}.ds-badge-positive{color:var(--positive,#b7d6a0)}"
+    },
+    {
+      "name": "Panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "Flat container with a compact heading.",
+      "html": "<div class=\"ds-demo\"><section class=\"ds-panel\"><header class=\"ds-panel-heading\"><div><h2>Parking availability</h2><p>Campus parking zones</p></div></header></section></div>",
+      "css": ".ds-demo{font-family:Manrope,'Segoe UI',sans-serif;color:var(--text,#efefe9);line-height:1.6}.ds-demo button,.ds-demo input{font-family:inherit}.ds-demo button{cursor:pointer}.ds-demo button:active:not(:disabled){transform:translateY(1px)}.ds-demo button:disabled{opacity:.5;cursor:not-allowed}.ds-demo button,.ds-demo input{transition:background-color 180ms var(--ease,cubic-bezier(.22,1,.36,1)),border-color 180ms var(--ease,cubic-bezier(.22,1,.36,1)),color 180ms var(--ease,cubic-bezier(.22,1,.36,1))}.ds-demo :focus-visible{outline:2px solid var(--accent,#d4e8a0);outline-offset:4px}@media(prefers-reduced-motion:reduce){.ds-demo *{animation:none!important;transition:none!important}}.ds-panel{border:1px solid var(--border,#303630);background:var(--surface,#191c1a);border-radius:var(--radius,12px);min-width:0;overflow:hidden}.ds-panel-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:24px 24px 20px}.ds-panel-heading p{font-size:10px;color:var(--muted,#96a095);margin-top:7px}.ds-panel-heading h2{font-size:15px;font-weight:600}.ds-panel h2,.ds-panel p{margin:0}.ds-panel h2{line-height:1.25}.ds-panel p{margin-top:7px}"
+    },
+    {
+      "name": "Vehicle plate",
+      "kind": "custom",
+      "refersTo": "plate",
+      "description": "Monospaced identifier with a region marker.",
+      "html": "<div class=\"ds-demo\"><span class=\"ds-plate\"><span class=\"ds-plate-region\">IND</span>KL 07 AB 1234</span></div>",
+      "css": ".ds-demo{font-family:Manrope,'Segoe UI',sans-serif;color:var(--text,#efefe9);line-height:1.6}.ds-demo button,.ds-demo input{font-family:inherit}.ds-demo button{cursor:pointer}.ds-demo button:active:not(:disabled){transform:translateY(1px)}.ds-demo button:disabled{opacity:.5;cursor:not-allowed}.ds-demo button,.ds-demo input{transition:background-color 180ms var(--ease,cubic-bezier(.22,1,.36,1)),border-color 180ms var(--ease,cubic-bezier(.22,1,.36,1)),color 180ms var(--ease,cubic-bezier(.22,1,.36,1))}.ds-demo :focus-visible{outline:2px solid var(--accent,#d4e8a0);outline-offset:4px}@media(prefers-reduced-motion:reduce){.ds-demo *{animation:none!important;transition:none!important}}.ds-plate{display:inline-flex;align-items:center;border:1px solid #424941;border-radius:4px;background:#202420;color:#ebeee4;font-family:Consolas,'Courier New',monospace;font-size:12px;font-weight:500;white-space:nowrap;line-height:1;padding:8px 10px;gap:9px;letter-spacing:.2px}.ds-plate-region{color:#9eaea0;font-size:7px;letter-spacing:0;border-right:1px solid #454f42;padding-right:8px;align-self:stretch;display:grid;place-items:center}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Campus Access Desk",
+    "overview": "A shared dark working frame gives administrators, security personnel and students equal care. Charcoal surfaces, warm white text and muted yellow-green actions establish a quiet operational hierarchy. Compact data and controls sit inside generous page spacing; plate identifiers provide the distinctive visual anchor.",
+    "keyCharacteristics": [
+      "Fixed dark palette and thin rules",
+      "Self-hosted Manrope and monospaced plates",
+      "One responsive frame for three equally considered roles",
+      "Short state transitions with reduced-motion support"
+    ],
+    "rules": [
+      {
+        "name": "Flat working surfaces",
+        "body": "Use tonal layers and thin borders for operational panels. Reserve the illustrated shadow for the login recognition preview.",
+        "section": "elevation"
+      },
+      {
+        "name": "Readable status",
+        "body": "Pair status color with readable text.",
+        "section": "colors"
+      }
+    ],
+    "dos": [
+      "Do preserve equal care for all roles and visible demo labeling.",
+      "Do retain keyboard focus, mobile navigation and reduced-motion support.",
+      "Do preserve the original SVG logo and the Manrope OFL license."
+    ],
+    "donts": [
+      "Do not add a light-mode switch to the fixed-dark implementation.",
+      "Do not claim the authored SVG schematic is verified geography or per-space sensing.",
+      "Do not imply unsupported authentication or live-camera capabilities."
+    ]
+  }
+}

@@ -40,20 +40,20 @@ const Dashboard = ({ onLogout, theme, toggleTheme }) => {
     ]
 
     const vehicles = [
-        { id: 'V001', plate: 'KL-07-AB-1234', type: 'Staff', owner: 'Dr. Rajesh Kumar', status: 'inside', time: '08:15 AM' },
-        { id: 'V002', plate: 'KL-07-CD-5678', type: 'Student', owner: 'Arun Menon', status: 'inside', time: '08:32 AM' },
+        { id: 'V001', plate: 'KL-07-AB-1234', type: 'Staff', owner: 'Sample Administrator', status: 'inside', time: '08:15 AM' },
+        { id: 'V002', plate: 'KL-07-CD-5678', type: 'Student', owner: 'Sample Student', status: 'inside', time: '08:32 AM' },
         { id: 'V003', plate: 'KL-10-EF-9012', type: 'Taxi', owner: '-', status: 'pending', time: '09:45 AM' },
         { id: 'V004', plate: 'KL-07-GH-3456', type: 'Bus', owner: 'Route 5', status: 'inside', time: '07:50 AM' },
-        { id: 'V005', plate: 'KL-08-IJ-7890', type: 'Staff', owner: 'Prof. Sarah John', status: 'exited', time: '11:30 AM' },
+        { id: 'V005', plate: 'KL-08-IJ-7890', type: 'Staff', owner: 'Sample Staff One', status: 'exited', time: '11:30 AM' },
         { id: 'V006', plate: 'KL-07-KL-2345', type: 'Student', owner: 'Priya Nair', status: 'inside', time: '08:55 AM' },
         { id: 'V007', plate: 'KL-09-MN-6789', type: 'Visitor', owner: 'Guest', status: 'pending', time: '10:15 AM' },
-        { id: 'V008', plate: 'KL-07-OP-0123', type: 'Staff', owner: 'Dr. Meena Pillai', status: 'inside', time: '08:10 AM' },
+        { id: 'V008', plate: 'KL-07-OP-0123', type: 'Staff', owner: 'Sample Staff Two', status: 'inside', time: '08:10 AM' },
     ]
 
     const activities = [
         { id: 1, type: 'entry', message: 'Vehicle KL-07-AB-1234 entered North Gate', time: '2 min ago', icon: 'entry' },
         { id: 2, type: 'scan', message: 'Number plate scanned: KL-10-EF-9012', time: '5 min ago', icon: 'scan' },
-        { id: 3, type: 'alert', message: 'Late entry recorded for Arun Menon', time: '12 min ago', icon: 'alert' },
+        { id: 3, type: 'alert', message: 'Late entry recorded for Sample Student', time: '12 min ago', icon: 'alert' },
         { id: 4, type: 'exit', message: 'Vehicle KL-08-IJ-7890 exited South Gate', time: '18 min ago', icon: 'exit' },
         { id: 5, type: 'approval', message: 'Taxi approved for campus entry', time: '25 min ago', icon: 'check' },
         { id: 6, type: 'entry', message: 'College bus Route 5 entered', time: '45 min ago', icon: 'entry' },

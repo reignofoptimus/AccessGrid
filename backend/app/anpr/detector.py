@@ -1,11 +1,20 @@
 import cv2
 import pytesseract
-from ultralytics import YOLO
 import re
+import os
 
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+try:
+    from ultralytics import YOLO
+    _cur_dir = os.path.dirname(os.path.abspath(__file__))
+    _model_path = os.path.join(_cur_dir, "best.pt")
+    model = YOLO(_model_path) if os.path.exists(_model_path) else None
+except Exception as e:
+    print(f"ANPR YOLO init note: {e}")
+    model = None
 
-model = YOLO(r"C:\VSC PROJECTS\REACT\ACCESSGRIDNEW\backend\app\anpr\best.pt")
+# Optional tesseract path if standard location exists
+if os.path.exists(r"C:\Program Files\Tesseract-OCR\tesseract.exe"):
+    pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 def clean_plate(text):
     text = text.upper()
@@ -38,32 +47,34 @@ def clean_plate(text):
     return "".join(chars)
 
 def detect_plate(image):
-    results = model(image)
-    boxes = results[0].boxes.xyxy
-
-    if len(boxes) == 0:
-        print("No license plate detected")
+    if model is None:
+        print("YOLO model not loaded")
         return None
+    try:
+        results = model(image)
+        boxes = results[0].boxes.xyxy
 
-    x1, y1, x2, y2 = map(int, boxes[0])
-    cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 2)
-    padding = 20
-    x1 = max(0, x1 - padding)
-    y1 = max(0, y1 - padding)
-    x2 = min(image.shape[1], x2 + padding)
-    y2 = min(image.shape[0], y2 + padding)
-    plate = image[y1:y2, x1:x2]
-    plate = cv2.resize(plate, None, fx=4, fy=4, interpolation=cv2.INTER_CUBIC)
-    gray = cv2.cvtColor(plate, cv2.COLOR_BGR2GRAY)
-    gray = cv2.bilateralFilter(gray, 11, 17, 17)
-    _, thresh = cv2.threshold(gray, 120, 255, cv2.THRESH_BINARY)
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
-    thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
-    text = pytesseract.image_to_string(thresh, config='--psm 7 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789')
-    text = clean_plate(text)
-    print("License Plate:", text)
-    cv2.imshow("Plate",plate)
-    cv2.imshow("Gray",gray)
-    cv2.imshow("Threshold", thresh)
-    cv2.waitKey(1)
-    return text
+        if len(boxes) == 0:
+            print("No license plate detected")
+            return None
+
+        x1, y1, x2, y2 = map(int, boxes[0])
+        padding = 20
+        x1 = max(0, x1 - padding)
+        y1 = max(0, y1 - padding)
+        x2 = min(image.shape[1], x2 + padding)
+        y2 = min(image.shape[0], y2 + padding)
+        plate = image[y1:y2, x1:x2]
+        plate = cv2.resize(plate, None, fx=4, fy=4, interpolation=cv2.INTER_CUBIC)
+        gray = cv2.cvtColor(plate, cv2.COLOR_BGR2GRAY)
+        gray = cv2.bilateralFilter(gray, 11, 17, 17)
+        _, thresh = cv2.threshold(gray, 120, 255, cv2.THRESH_BINARY)
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
+        thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
+        text = pytesseract.image_to_string(thresh, config='--psm 7 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789')
+        text = clean_plate(text)
+        print("License Plate:", text)
+        return text
+    except Exception as err:
+        print(f"ANPR detection error: {err}")
+        return None

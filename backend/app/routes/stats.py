@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+from flask_login import current_user
 from app import db
 from app.models import Vehicle, EntryLog, ParkingZone
 from datetime import datetime, timedelta
@@ -8,7 +9,7 @@ bp = Blueprint('stats', __name__)
 
 @bp.route('/', methods=['GET'])
 def get_stats():
-    role = request.args.get('role', 'admin')
+    role = current_user.role
     
     total_vehicles = Vehicle.query.count()
     vehicles_inside = Vehicle.query.filter_by(is_inside=True).count()
@@ -47,7 +48,7 @@ def get_stats():
             { 'title': 'Pending Scans', 'value': str(pending), 'change': '', 'trend': 'neutral', 'icon': 'alert' },
         ])
     else:  # student
-        user_id = request.args.get('user_id', type=int)
+        user_id = current_user.id
         vehicle = Vehicle.query.filter_by(owner_id=user_id).first() if user_id else None
         total_visits = 0
         if vehicle:

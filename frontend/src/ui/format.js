@@ -1,0 +1,6 @@
+export const parseTime = value => new Date(value && !/[zZ]|[+-]\d\d:\d\d$/.test(value) ? `${value}Z` : value)
+export const time = value => parseTime(value).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Kolkata'})
+export const date = value => parseTime(value).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',timeZone:'Asia/Kolkata'})
+export const dayKey = value => parseTime(value).toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'})
+export const initials = name => (name || 'Campus user').split(' ').filter(part=>!part.endsWith('.')).slice(0,2).map(part=>part[0]).join('')
+export const normalizePlate = value => (value || '').replace(/[^a-z0-9]/gi,'').toUpperCase()

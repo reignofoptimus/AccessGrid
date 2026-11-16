@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { getVehicleByPlate, recordEntry, recordExit, getEntryLogs, getParkingZones, getStats } from '../api/api'
 import Sidebar from './Sidebar'
 import StatsCard from './StatsCard'
@@ -10,6 +10,16 @@ import { detectPlate } from '../api/api';
 
 
 
+    const formatTimeAgo = (date) => {
+        const seconds = Math.floor((new Date() - date) / 1000)
+        if (seconds < 60) return 'Just now'
+        const minutes = Math.floor(seconds / 60)
+        if (minutes < 60) return `${minutes} min ago`
+        const hours = Math.floor(minutes / 60)
+        return `${hours}h ago`
+    }
+
+
 const SecurityDashboard = ({ user, onLogout, theme, toggleTheme }) => {
     const [activeView, setActiveView] = useState('overview')
     const [showScanModal, setShowScanModal] = useState(false)
@@ -18,22 +28,23 @@ const SecurityDashboard = ({ user, onLogout, theme, toggleTheme }) => {
     const [stats, setStats] = useState([])
     const [recentScans, setRecentScans] = useState([])
     const [activities, setActivities] = useState([])
+    const [logFilter, setLogFilter] = useState('All')
     const [parkingZones, setParkingZones] = useState([])
-    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const sidebarOpen = false;
 
     const handleImageUpload = async (event) => {
         const file = event.target.files[0];
         if (!file) return;
 
-        const plate = await detectPlate(file);
-        setScannedPlate(plate);
+        try {
+            const plate = await detectPlate(file);
+            setScannedPlate(plate);
+        } catch (err) {
+            alert(err.message || 'Could not detect a plate. Try manual entry.');
+        }
     };
 
-    useEffect(() => {
-        fetchData()
-    }, [])
-
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             const [statsRes, logsRes, zonesRes] = await Promise.all([
                 getStats('security'),
@@ -67,16 +78,12 @@ const SecurityDashboard = ({ user, onLogout, theme, toggleTheme }) => {
         } catch (err) {
             console.error('Failed to fetch data:', err)
         }
-    }
+    }, [])
 
-    const formatTimeAgo = (date) => {
-        const seconds = Math.floor((new Date() - date) / 1000)
-        if (seconds < 60) return 'Just now'
-        const minutes = Math.floor(seconds / 60)
-        if (minutes < 60) return `${minutes} min ago`
-        const hours = Math.floor(minutes / 60)
-        return `${hours}h ago`
-    }
+    // Fetching external API data updates state only after awaited responses.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    useEffect(() => { fetchData() }, [fetchData])
+
 
     const handleScan = async () => {
         if (!scannedPlate) return
@@ -86,7 +93,7 @@ const SecurityDashboard = ({ user, onLogout, theme, toggleTheme }) => {
         } catch {
             // Vehicle not found → unregistered
             setScanResult({
-                plate: scannedPlate,
+                plate: scanResult?.plate || scannedPlate,
                 type: 'Unknown',
                 owner: 'Not Found',
                 registered: false,
@@ -98,7 +105,7 @@ const SecurityDashboard = ({ user, onLogout, theme, toggleTheme }) => {
     const handleAllowEntry = async () => {
         try {
             await recordEntry({
-                plate: scannedPlate,
+                plate: scanResult?.plate || scannedPlate,
                 type: scanResult?.type || 'Visitor',
                 owner: scanResult?.owner || 'Guest',
                 gate: 'Main Gate',
@@ -115,11 +122,18 @@ const SecurityDashboard = ({ user, onLogout, theme, toggleTheme }) => {
         }
     }
 
+    const handleRecordExit = async () => {
+        try {
+            await recordExit({ plate: scanResult.plate, gate: 'Main Gate' })
+            setScanResult(null); setScannedPlate(''); fetchData()
+        } catch (err) { alert(err.response?.data?.error || 'Could not record exit') }
+    }
+
     const menuItems = [
-        { id: 'overview', label: 'Gate Control', icon: 'grid' },
-        { id: 'scan', label: 'Scan Vehicle', icon: 'scan' },
-        { id: 'parking', label: 'Parking Status', icon: 'parking' },
-        { id: 'logs', label: 'Entry Logs', icon: 'chart' },
+        { id: 'overview', label: 'Gate control', icon: 'grid' },
+        { id: 'scan', label: 'Vehicle scanner', icon: 'scan' },
+        { id: 'parking', label: 'Parking status', icon: 'parking' },
+        { id: 'logs', label: 'Entry logs', icon: 'chart' },
         { id: 'settings', label: 'Settings', icon: 'settings' },
     ]
 
@@ -138,16 +152,16 @@ const SecurityDashboard = ({ user, onLogout, theme, toggleTheme }) => {
 
             <main className="dashboard-main">
                 <header className="dashboard-header">
-                    <div className="header-left">
+                    <div className="header-left"><span className="context-label">Workspace / Gate operations</span>
                         <h1 className="page-title">
-                            {activeView === 'overview' && 'Gate Control'}
-                            {activeView === 'scan' && 'Vehicle Scanner'}
-                            {activeView === 'parking' && 'Parking Status'}
-                            {activeView === 'logs' && 'Entry Logs'}
+                            {activeView === 'overview' && 'Gate control'}
+                            {activeView === 'scan' && 'Vehicle scanner'}
+                            {activeView === 'parking' && 'Parking status'}
+                            {activeView === 'logs' && 'Entry logs'}
                             {activeView === 'settings' && 'Settings'}
                         </h1>
                         <p className="page-subtitle">
-                            Welcome, {user.name} · Security Staff
+                            Monitor vehicle arrivals and departures
                         </p>
                     </div>
                     <div className="header-right">
@@ -156,7 +170,7 @@ const SecurityDashboard = ({ user, onLogout, theme, toggleTheme }) => {
                                 <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" strokeLinecap="round" strokeLinejoin="round" />
                                 <circle cx="12" cy="13" r="4" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
-                            Quick Scan
+                            Scan vehicle
                         </button>
                         <div className="user-avatar security">
                             <span>SC</span>
@@ -176,10 +190,10 @@ const SecurityDashboard = ({ user, onLogout, theme, toggleTheme }) => {
                             <div className="main-grid">
                                 <section className="vehicle-section">
                                     <div className="section-header">
-                                        <h2>Recent Scans</h2>
+                                        <h2>Recent gate activity</h2>
                                         <span className="live-badge">
-                                            <span className="live-dot"></span>
-                                            Live
+        
+                                            Recent records
                                         </span>
                                     </div>
                                     <VehicleTable vehicles={recentScans} showVerified />
@@ -187,7 +201,7 @@ const SecurityDashboard = ({ user, onLogout, theme, toggleTheme }) => {
 
                                 <section className="activity-section">
                                     <div className="section-header">
-                                        <h2>Activity Log</h2>
+                                        <h2>Gate timeline</h2>
                                     </div>
                                     <ActivityFeed activities={activities} />
                                 </section>
@@ -204,12 +218,12 @@ const SecurityDashboard = ({ user, onLogout, theme, toggleTheme }) => {
                                             <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" strokeLinecap="round" strokeLinejoin="round" />
                                             <circle cx="12" cy="13" r="4" strokeLinecap="round" strokeLinejoin="round" />
                                         </svg>
-                                        <p>Camera Feed</p>
-                                        <span className="scanner-hint">Point camera at number plate</span>
+                                        <p>Plate recognition</p>
+                                        <span className="scanner-hint">Upload a plate image using Scan vehicle</span>
                                     </div>
                                 </div>
                                 <div className="scanner-controls">
-                                    <h3>Manual Entry</h3>
+                                    <h3>Manual entry</h3>
                                     <div className="scan-input-group">
                                         <input
                                             type="text"
@@ -241,7 +255,7 @@ const SecurityDashboard = ({ user, onLogout, theme, toggleTheme }) => {
                                                         <line x1="12" y1="16" x2="12.01" y2="16" strokeLinecap="round" />
                                                     </svg>
                                                 )}
-                                                <h4>{scanResult.registered ? 'Vehicle Registered' : 'Vehicle Not Registered'}</h4>
+                                                <h4>{scanResult.registered ? 'Vehicle registered' : 'Vehicle not registered'}</h4>
                                             </div>
                                             <div className="result-details">
                                                 <div className="detail-row">
@@ -258,11 +272,11 @@ const SecurityDashboard = ({ user, onLogout, theme, toggleTheme }) => {
                                                 </div>
                                             </div>
                                             <div className="result-actions">
-                                                <button className="allow-btn" onClick={handleAllowEntry}>
+                                                <button className="allow-btn" onClick={scanResult.isInside ? handleRecordExit : handleAllowEntry}>
                                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                                         <polyline points="20 6 9 17 4 12" strokeLinecap="round" strokeLinejoin="round" />
                                                     </svg>
-                                                    Allow Entry
+                                                    {scanResult.isInside ? 'Record exit' : 'Allow entry'}
                                                 </button>
                                                 <button className="deny-btn" onClick={() => { setScannedPlate(''); setScanResult(null) }}>
                                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -282,7 +296,7 @@ const SecurityDashboard = ({ user, onLogout, theme, toggleTheme }) => {
                     {activeView === 'parking' && (
                         <section className="full-section">
                             <div className="section-header">
-                                <h2>Real-time Parking Status</h2>
+                                <h2>Parking availability</h2>
                             </div>
                             <ParkingZones zones={parkingZones} />
                         </section>
@@ -291,15 +305,12 @@ const SecurityDashboard = ({ user, onLogout, theme, toggleTheme }) => {
                     {activeView === 'logs' && (
                         <section className="full-section">
                             <div className="section-header">
-                                <h2>Today's Entry Logs</h2>
+                                <h2>Entry and exit logs</h2>
                                 <div className="filter-group">
-                                    <button className="filter-btn active">All</button>
-                                    <button className="filter-btn">Entries</button>
-                                    <button className="filter-btn">Exits</button>
-                                    <button className="filter-btn">Pending</button>
+                                    {['All', 'Entries', 'Exits'].map(filter => <button key={filter} className={`filter-btn ${logFilter === filter ? 'active' : ''}`} onClick={() => setLogFilter(filter)}>{filter}</button>)}
                                 </div>
                             </div>
-                            <VehicleTable vehicles={recentScans} showVerified expanded />
+                            <VehicleTable vehicles={recentScans.filter(scan => logFilter === 'All' || scan.status === (logFilter === 'Entries' ? 'inside' : 'exited'))} showVerified expanded />
                         </section>
                     )}
 
@@ -313,11 +324,11 @@ const SecurityDashboard = ({ user, onLogout, theme, toggleTheme }) => {
                                     <h3>Appearance</h3>
                                     <div className="setting-item">
                                         <div className="setting-info">
-                                            <span className="setting-label">Dark Mode</span>
+                                            <span className="setting-label">Dark mode</span>
                                             <span className="setting-desc">Toggle between light and dark themes</span>
                                         </div>
                                         <button
-                                            className={`toggle-switch ${theme === 'dark' ? 'active' : ''}`}
+                                            aria-label="Dark mode" aria-pressed={theme === 'dark'} className={`toggle-switch ${theme === 'dark' ? 'active' : ''}`}
                                             onClick={toggleTheme}
                                         >
                                             <span className="toggle-knob"></span>
@@ -328,19 +339,19 @@ const SecurityDashboard = ({ user, onLogout, theme, toggleTheme }) => {
                                     <h3>Scanner</h3>
                                     <div className="setting-item">
                                         <div className="setting-info">
-                                            <span className="setting-label">Auto-Scan Mode</span>
+                                            <span className="setting-label">Auto-scan mode</span>
                                             <span className="setting-desc">Automatically detect and scan plates</span>
                                         </div>
-                                        <button className="toggle-switch active">
+                                        <button className="toggle-switch" disabled aria-label="Setting not connected" title="This setting is not connected yet">
                                             <span className="toggle-knob"></span>
                                         </button>
                                     </div>
                                     <div className="setting-item">
                                         <div className="setting-info">
-                                            <span className="setting-label">Sound Alerts</span>
+                                            <span className="setting-label">Sound alerts</span>
                                             <span className="setting-desc">Play sound for unregistered vehicles</span>
                                         </div>
-                                        <button className="toggle-switch active">
+                                        <button className="toggle-switch" disabled aria-label="Setting not connected" title="This setting is not connected yet">
                                             <span className="toggle-knob"></span>
                                         </button>
                                     </div>
@@ -354,7 +365,7 @@ const SecurityDashboard = ({ user, onLogout, theme, toggleTheme }) => {
             {showScanModal && (
                 <div className="modal-overlay" onClick={() => setShowScanModal(false)}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                        <h3>Quick Vehicle Scan</h3>
+                        <h3>Scan a vehicle</h3>
                         <div className="scan-input-group">
                             <input type="file" accept="image/*" onChange={handleImageUpload} />
                             <input

@@ -98,12 +98,13 @@ const Sidebar = ({ menuItems, activeView, setActiveView, onLogout, theme, toggle
                 {getRoleBadge()}
             </div>
 
-            <nav className="sidebar-nav">
+            <nav className="sidebar-nav" aria-label="Main navigation"><p className="nav-group-label">Workspace</p>
                 <ul className="nav-list">
                     {menuItems.map((item) => (
                         <li key={item.id}>
                             <button
                                 className={`nav-item ${activeView === item.id ? 'active' : ''}`}
+                                aria-current={activeView === item.id ? "page" : undefined}
                                 onClick={() => setActiveView(item.id)}
                             >
                                 {getIcon(item.icon)}
@@ -114,8 +115,9 @@ const Sidebar = ({ menuItems, activeView, setActiveView, onLogout, theme, toggle
                 </ul>
             </nav>
 
-            <div className="sidebar-footer">
-                <div className="theme-section">
+            <div className="sidebar-campus"><span className="campus-symbol">P</span><strong>FISAT campus</strong><span>Vehicle access management</span><div className="lane-marking" /></div>
+            <div className="sidebar-footer"><div className="sidebar-user"><span className="user-initial">{user?.name?.split(" ").filter(Boolean).slice(0, 2).map(n => n[0]).join("")}</span><div><strong>{user?.name}</strong><span>{user?.department}</span></div></div>
+                <div className="theme-section"><span>Appearance</span>
                     <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
                 </div>
                 <button className="logout-btn" onClick={onLogout}>
@@ -124,7 +126,7 @@ const Sidebar = ({ menuItems, activeView, setActiveView, onLogout, theme, toggle
                         <polyline points="16 17 21 12 16 7" strokeLinecap="round" strokeLinejoin="round" />
                         <line x1="21" y1="12" x2="9" y2="12" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
-                    <span>Sign Out</span>
+                    <span>Sign out</span>
                 </button>
             </div>
         </aside>

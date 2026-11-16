@@ -1,90 +1,17 @@
-import './VehicleTable.css'
-
-
-const VehicleTable = ({ vehicles, expanded, showDepartment, showVerified }) => {
-    const getStatusBadge = (status) => {
-        switch (status) {
-            case 'inside':
-                return <span className="status-badge inside">Inside</span>
-            case 'exited':
-                return <span className="status-badge exited">Exited</span>
-            case 'pending':
-                return <span className="status-badge pending">Pending</span>
-            case 'active':
-                return <span className="status-badge active">Active</span>
-            case 'inactive':
-                return <span className="status-badge inactive">Inactive</span>
-            default:
-                return null
-        }
-    }
-
-    const getTypeBadge = (type) => {
-        return <span className={`type-badge ${type.toLowerCase()}`}>{type}</span>
-    }
-
-    return (
-        <div className={`vehicle-table-wrapper ${expanded ? 'expanded' : ''}`}>
-            <table className="vehicle-table">
-                <thead>
-                    <tr>
-                        <th>Plate Number</th>
-                        <th>Type</th>
-                        <th>Owner</th>
-                        {showDepartment && <th>Department</th>}
-                        <th>Status</th>
-                        {!showDepartment && <th>Time</th>}
-                        {showVerified && <th>Verified</th>}
-                        {expanded && <th>Actions</th>}
-                    </tr>
-                </thead>
-                <tbody>
-                    {vehicles.map((vehicle) => (
-                        <tr key={vehicle.id}>
-                            <td className="plate-cell">
-                                <code>{vehicle.plate}</code>
-                            </td>
-                            <td>{getTypeBadge(vehicle.type)}</td>
-                            <td>{vehicle.owner}</td>
-                            {showDepartment && <td className="dept-cell">{vehicle.department}</td>}
-                            <td>{getStatusBadge(vehicle.status)}</td>
-                            {!showDepartment && <td className="time-cell">{vehicle.time}</td>}
-                            {showVerified && (
-                                <td>
-                                    {vehicle.verified ? (
-                                        <span className="verified-badge yes">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                <polyline points="20 6 9 17 4 12" strokeLinecap="round" strokeLinejoin="round" />
-                                            </svg>
-                                        </span>
-                                    ) : (
-                                        <span className="verified-badge no">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                <circle cx="12" cy="12" r="10" />
-                                                <line x1="12" y1="8" x2="12" y2="12" strokeLinecap="round" />
-                                                <line x1="12" y1="16" x2="12.01" y2="16" strokeLinecap="round" />
-                                            </svg>
-                                        </span>
-                                    )}
-                                </td>
-                            )}
-                            {expanded && (
-                                <td>
-                                    <button className="action-btn">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <circle cx="12" cy="12" r="1" />
-                                            <circle cx="19" cy="12" r="1" />
-                                            <circle cx="5" cy="12" r="1" />
-                                        </svg>
-                                    </button>
-                                </td>
-                            )}
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
-    )
+import { Fragment, useState } from 'react'
+export default function VehicleTable({ vehicles, expanded, showDepartment, showVerified }) {
+  const [open, setOpen] = useState(null)
+  const columns = 5 + Number(!!showVerified) + Number(!!expanded)
+  return <div className="vehicle-table-wrapper"><table className="vehicle-table">
+    <thead><tr><th>Vehicle plate</th><th>Type</th><th>Owner</th>{showDepartment && <th>Department</th>}<th>Status</th>{!showDepartment && <th>Time</th>}{showVerified && <th>Verified</th>}{expanded && <th><span className="sr-only">Details</span></th>}</tr></thead>
+    <tbody>{vehicles.map(vehicle => <Fragment key={vehicle.id}><tr>
+      <td className="plate-cell"><code>{vehicle.plate}</code></td><td><span className="vehicle-type">{vehicle.type}</span></td><td>{vehicle.owner}</td>
+      {showDepartment && <td className="dept-cell">{vehicle.department || '—'}</td>}
+      <td><span className={`status-badge ${vehicle.status}`}>{({inside: 'Inside', exited: 'Exited', active: 'Active', inactive: 'Inactive', pending: 'Pending'})[vehicle.status] || vehicle.status}</span></td>
+      {!showDepartment && <td className="time-cell">{vehicle.time || '—'}</td>}
+      {showVerified && <td><span className="verification-text">{vehicle.verified ? 'Yes' : 'No'}</span></td>}
+      {expanded && <td><button className="table-detail-button" aria-label={`Details for ${vehicle.plate}`} aria-expanded={open === vehicle.id} onClick={() => setOpen(open === vehicle.id ? null : vehicle.id)}>{open === vehicle.id ? '−' : '+'}</button></td>}
+    </tr>{open === vehicle.id && <tr className="vehicle-detail-row"><td colSpan={columns}>{vehicle.plate} · {vehicle.owner} · {vehicle.department || vehicle.type}{vehicle.isInside !== undefined && ` · ${vehicle.isInside ? 'Inside campus' : 'Outside campus'}`}</td></tr>}</Fragment>)}
+    {!vehicles.length && <tr><td colSpan={columns} className="empty-state">No vehicles to display</td></tr>}</tbody>
+  </table></div>
 }
-
-export default VehicleTable

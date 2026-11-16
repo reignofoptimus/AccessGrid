@@ -1,11 +1,17 @@
 """
-Seed script to populate the database with demo data.
+Seed script to populate the database with entirely synthetic demo data.
+Seed accounts get random passwords that are never printed. Provision your own
+account with flask --app run create-user; the browser demo works independently.
 Run: python seed.py
 """
 from app import create_app, db
 from app.models import User, Vehicle, ParkingZone, EntryLog
 from datetime import datetime, timedelta
 
+import os
+import secrets
+if os.environ.get('ACCESSGRID_PRODUCTION') == '1':
+    raise RuntimeError('Demo seed is forbidden in production')
 app = create_app()
 
 def seed():
@@ -21,27 +27,27 @@ def seed():
         db.session.commit()
 
         # ── Users ─────────────────────────────────────────────
-        admin = User(username='admin', role='admin', name='Dr. Rajesh Kumar', department='Administration')
-        admin.set_password('admin123')
+        admin = User(username='admin', role='admin', name='Sample Administrator', department='Administration')
+        admin.set_password(secrets.token_urlsafe(32))
 
-        security = User(username='security', role='security', name='John Mathew', department='Security')
-        security.set_password('security123')
+        security = User(username='security', role='security', name='Sample Security Operator', department='Security')
+        security.set_password(secrets.token_urlsafe(32))
 
-        student = User(username='student', role='student', name='Arun Menon', department='Computer Science', student_id='FISAT2024001')
-        student.set_password('student123')
+        student = User(username='student', role='student', name='Sample Student', department='Computer Science', student_id='DEMO-STUDENT-001')
+        student.set_password(secrets.token_urlsafe(32))
 
         db.session.add_all([admin, security, student])
         db.session.flush()  # get IDs
 
         # ── Vehicles ──────────────────────────────────────────
         vehicles_data = [
-            { 'plate': 'KL-07-AB-1234', 'type': 'Staff',   'owner': 'Dr. Rajesh Kumar',  'dept': 'Computer Science', 'owner_id': admin.id },
-            { 'plate': 'KL-07-CD-5678', 'type': 'Staff',   'owner': 'Prof. Sarah John',  'dept': 'Electronics',      'owner_id': None },
-            { 'plate': 'KL-08-EF-9012', 'type': 'Staff',   'owner': 'Dr. Meena Pillai',  'dept': 'Mechanical',       'owner_id': None },
-            { 'plate': 'KL-07-GH-3456', 'type': 'Staff',   'owner': 'Dr. Thomas Mathew', 'dept': 'Civil',            'owner_id': None },
-            { 'plate': 'KL-09-IJ-7890', 'type': 'HOD',     'owner': 'Dr. Anil Menon',    'dept': 'Computer Science', 'owner_id': None },
-            { 'plate': 'KL-07-KL-2345', 'type': 'Staff',   'owner': 'Prof. Deepa Nair',  'dept': 'Mathematics',      'owner_id': None },
-            { 'plate': 'KL-07-ST-4521', 'type': 'Student', 'owner': 'Arun Menon',        'dept': 'Computer Science', 'owner_id': student.id },
+            { 'plate': 'KL-07-AB-1234', 'type': 'Staff',   'owner': 'Sample Administrator',  'dept': 'Computer Science', 'owner_id': admin.id },
+            { 'plate': 'KL-07-CD-5678', 'type': 'Staff',   'owner': 'Sample Staff One',  'dept': 'Electronics',      'owner_id': None },
+            { 'plate': 'KL-08-EF-9012', 'type': 'Staff',   'owner': 'Sample Staff Two',  'dept': 'Mechanical',       'owner_id': None },
+            { 'plate': 'KL-07-GH-3456', 'type': 'Staff',   'owner': 'Sample Staff Three', 'dept': 'Civil',            'owner_id': None },
+            { 'plate': 'KL-09-IJ-7890', 'type': 'HOD',     'owner': 'Sample Department Head',    'dept': 'Computer Science', 'owner_id': None },
+            { 'plate': 'KL-07-KL-2345', 'type': 'Staff',   'owner': 'Sample Staff Four',  'dept': 'Mathematics',      'owner_id': None },
+            { 'plate': 'KL-07-ST-4521', 'type': 'Student', 'owner': 'Sample Student',        'dept': 'Computer Science', 'owner_id': student.id },
         ]
 
         vehicle_objects = []

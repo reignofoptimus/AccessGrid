@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
-import { getVehicles, addVehicle, getParkingZones, getStats } from '../api/api'
+import { getVehicles, addVehicle, getParkingZones, getStats, getEntryLogs } from '../api/api'
 import Sidebar from './Sidebar'
 import StatsCard from './StatsCard'
 import VehicleTable from './VehicleTable'
 import ParkingZones from './ParkingZones'
 import './Dashboard.css'
+import Reports from './Reports'
 
 const AdminDashboard = ({ user, onLogout, theme, toggleTheme }) => {
     const [activeView, setActiveView] = useState('overview')
@@ -14,6 +15,9 @@ const AdminDashboard = ({ user, onLogout, theme, toggleTheme }) => {
     const [registeredVehicles, setRegisteredVehicles] = useState([])
     const [parkingZones, setParkingZones] = useState([])
     const [loading, setLoading] = useState(true)
+    const [logs, setLogs] = useState([])
+    const [search, setSearch] = useState('')
+    const filteredVehicles = registeredVehicles.filter(v => [v.plate, v.owner, v.department].some(value => value?.toLowerCase().includes(search.toLowerCase())))
 
     useEffect(() => {
         fetchData()
@@ -22,14 +26,16 @@ const AdminDashboard = ({ user, onLogout, theme, toggleTheme }) => {
     const fetchData = async () => {
         setLoading(true)
         try {
-            const [vehiclesRes, zonesRes, statsRes] = await Promise.all([
+            const [vehiclesRes, zonesRes, statsRes, logsRes] = await Promise.all([
                 getVehicles(),
                 getParkingZones(),
                 getStats('admin'),
+                getEntryLogs({ limit: 1000 }),
             ])
             setRegisteredVehicles(vehiclesRes.data)
             setParkingZones(zonesRes.data)
             setStats(statsRes.data)
+            setLogs(logsRes.data)
         } catch (err) {
             console.error('Failed to fetch data:', err)
         } finally {
@@ -55,8 +61,8 @@ const AdminDashboard = ({ user, onLogout, theme, toggleTheme }) => {
 
     const menuItems = [
         { id: 'overview', label: 'Overview', icon: 'grid' },
-        { id: 'vehicles', label: 'Registered Vehicles', icon: 'car' },
-        { id: 'parking', label: 'Parking Zones', icon: 'parking' },
+        { id: 'vehicles', label: 'Registered vehicles', icon: 'car' },
+        { id: 'parking', label: 'Parking zones', icon: 'parking' },
         { id: 'reports', label: 'Reports', icon: 'chart' },
         { id: 'settings', label: 'Settings', icon: 'settings' },
     ]
@@ -75,16 +81,16 @@ const AdminDashboard = ({ user, onLogout, theme, toggleTheme }) => {
 
             <main className="dashboard-main">
                 <header className="dashboard-header">
-                    <div className="header-left">
+                    <div className="header-left"><span className="context-label">Workspace / Administration</span>
                         <h1 className="page-title">
-                            {activeView === 'overview' && 'Admin Dashboard'}
-                            {activeView === 'vehicles' && 'Registered Vehicles'}
-                            {activeView === 'parking' && 'Parking Management'}
-                            {activeView === 'reports' && 'Reports & Analytics'}
+                            {activeView === 'overview' && 'Campus overview'}
+                            {activeView === 'vehicles' && 'Registered vehicles'}
+                            {activeView === 'parking' && 'Parking management'}
+                            {activeView === 'reports' && 'Reports & analytics'}
                             {activeView === 'settings' && 'Settings'}
                         </h1>
                         <p className="page-subtitle">
-                            Welcome, {user.name} · College Administrator
+                            Vehicle access and parking across FISAT campus
                         </p>
                     </div>
                     <div className="header-right">
@@ -93,7 +99,7 @@ const AdminDashboard = ({ user, onLogout, theme, toggleTheme }) => {
                                 <circle cx="11" cy="11" r="8" />
                                 <path d="M21 21l-4.35-4.35" strokeLinecap="round" />
                             </svg>
-                            <input type="text" placeholder="Search vehicles..." />
+                            <input type="search" aria-label="Search vehicles" placeholder="Search vehicles" value={search} onChange={e => setSearch(e.target.value)} />
                         </div>
                         <div className="user-avatar">
                             <span>AD</span>
@@ -102,6 +108,7 @@ const AdminDashboard = ({ user, onLogout, theme, toggleTheme }) => {
                 </header>
 
                 <div className="dashboard-content fade-in">
+                    {loading && <p className="loading-state" role="status">Loading campus data?</p>}
                     {activeView === 'overview' && (
                         <>
                             <section className="stats-section">
@@ -113,20 +120,20 @@ const AdminDashboard = ({ user, onLogout, theme, toggleTheme }) => {
                             <div className="main-grid">
                                 <section className="vehicle-section">
                                     <div className="section-header">
-                                        <h2>Recently Registered</h2>
+                                        <h2>Vehicle registry</h2>
                                         <button className="view-all-btn" onClick={() => setActiveView('vehicles')}>
-                                            View All
+                                            View registry
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                                 <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
                                             </svg>
                                         </button>
                                     </div>
-                                    <VehicleTable vehicles={registeredVehicles.slice(0, 5)} showDepartment />
+                                    <p className="section-description">Registered vehicles and their access status</p><VehicleTable vehicles={filteredVehicles.slice(0, 5)} showDepartment /><div className="table-footer"><span>{filteredVehicles.length} registered vehicles</span><span>FISAT campus registry</span></div>
                                 </section>
 
                                 <section className="activity-section">
                                     <div className="section-header">
-                                        <h2>Parking Overview</h2>
+                                        <h2>Parking availability</h2>
                                     </div>
                                     <ParkingZones zones={parkingZones} compact />
                                 </section>
@@ -137,22 +144,22 @@ const AdminDashboard = ({ user, onLogout, theme, toggleTheme }) => {
                     {activeView === 'vehicles' && (
                         <section className="full-section">
                             <div className="section-header">
-                                <h2>Pre-Registered Staff Vehicles</h2>
+                                <h2>Registered vehicles</h2>
                                 <button className="add-btn" onClick={() => setShowAddVehicle(true)}>
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                         <path d="M12 5v14M5 12h14" strokeLinecap="round" />
                                     </svg>
-                                    Add Vehicle
+                                    Add vehicle
                                 </button>
                             </div>
 
                             {showAddVehicle && (
                                 <div className="add-vehicle-form slide-up">
-                                    <h3>Register New Vehicle</h3>
+                                    <h3>Register a vehicle</h3>
                                     <form onSubmit={handleAddVehicle}>
                                         <div className="form-grid">
                                             <div className="form-group">
-                                                <label>Plate Number</label>
+                                                <label>Plate number</label>
                                                 <input
                                                     type="text"
                                                     placeholder="KL-XX-AB-1234"
@@ -173,7 +180,7 @@ const AdminDashboard = ({ user, onLogout, theme, toggleTheme }) => {
                                                 </select>
                                             </div>
                                             <div className="form-group">
-                                                <label>Owner Name</label>
+                                                <label>Owner name</label>
                                                 <input
                                                     type="text"
                                                     placeholder="Full name"
@@ -195,13 +202,13 @@ const AdminDashboard = ({ user, onLogout, theme, toggleTheme }) => {
                                         </div>
                                         <div className="form-actions">
                                             <button type="button" className="cancel-btn" onClick={() => setShowAddVehicle(false)}>Cancel</button>
-                                            <button type="submit" className="submit-btn">Register Vehicle</button>
+                                            <button type="submit" className="submit-btn">Register vehicle</button>
                                         </div>
                                     </form>
                                 </div>
                             )}
 
-                            <VehicleTable vehicles={registeredVehicles} showDepartment expanded />
+                            <VehicleTable vehicles={filteredVehicles} showDepartment expanded />
                         </section>
                     )}
 
@@ -217,58 +224,27 @@ const AdminDashboard = ({ user, onLogout, theme, toggleTheme }) => {
                     {activeView === 'reports' && (
                         <section className="full-section">
                             <div className="section-header">
-                                <h2>Analytics Dashboard</h2>
+                                <h2>Reports</h2>
                             </div>
-                            <div className="analytics-grid">
-                                <div className="chart-card">
-                                    <h3>Daily Entry/Exit Trends</h3>
-                                    <div className="chart-placeholder">
-                                        <div className="bar-chart">
-                                            {[40, 65, 95, 100, 85, 60, 45, 55, 75, 90, 70, 35].map((h, i) => (
-                                                <div key={i} className="bar" style={{ height: `${h}%` }}>
-                                                    <span className="bar-label">{['6', '7', '8', '9', '10', '11', '12', '1', '2', '3', '4', '5'][i]}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="chart-card">
-                                    <h3>Vehicle Distribution</h3>
-                                    <div className="donut-stats">
-                                        <div className="donut-ring">
-                                            <svg viewBox="0 0 36 36">
-                                                <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--border-color)" strokeWidth="3" />
-                                                <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--accent)" strokeWidth="3" strokeDasharray="57 43" strokeLinecap="round" />
-                                                <circle cx="18" cy="18" r="15.9" fill="none" stroke="#22c55e" strokeWidth="3" strokeDasharray="25 75" strokeDashoffset="-57" strokeLinecap="round" />
-                                            </svg>
-                                            <span className="donut-center">{registeredVehicles.length}</span>
-                                        </div>
-                                        <div className="donut-legend">
-                                            <div className="legend-item"><span className="dot accent"></span> Staff ({registeredVehicles.filter(v => v.type === 'Staff').length})</div>
-                                            <div className="legend-item"><span className="dot success"></span> Students ({registeredVehicles.filter(v => v.type === 'Student').length})</div>
-                                            <div className="legend-item"><span className="dot light"></span> Others ({registeredVehicles.filter(v => !['Staff', 'Student'].includes(v.type)).length})</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <Reports vehicles={registeredVehicles} logs={logs} />
                         </section>
                     )}
 
                     {activeView === 'settings' && (
                         <section className="full-section">
                             <div className="section-header">
-                                <h2>System Settings</h2>
+                                <h2>System settings</h2>
                             </div>
                             <div className="settings-content">
                                 <div className="settings-group">
                                     <h3>Appearance</h3>
                                     <div className="setting-item">
                                         <div className="setting-info">
-                                            <span className="setting-label">Dark Mode</span>
+                                            <span className="setting-label">Dark mode</span>
                                             <span className="setting-desc">Toggle between light and dark themes</span>
                                         </div>
                                         <button
-                                            className={`toggle-switch ${theme === 'dark' ? 'active' : ''}`}
+                                            aria-label="Dark mode" aria-pressed={theme === 'dark'} className={`toggle-switch ${theme === 'dark' ? 'active' : ''}`}
                                             onClick={toggleTheme}
                                         >
                                             <span className="toggle-knob"></span>
@@ -279,10 +255,10 @@ const AdminDashboard = ({ user, onLogout, theme, toggleTheme }) => {
                                     <h3>Notifications</h3>
                                     <div className="setting-item">
                                         <div className="setting-info">
-                                            <span className="setting-label">New Vehicle Alerts</span>
+                                            <span className="setting-label">New vehicle alerts</span>
                                             <span className="setting-desc">Get notified when new vehicles are registered</span>
                                         </div>
-                                        <button className="toggle-switch active">
+                                        <button className="toggle-switch" disabled aria-label="Setting not connected" title="This setting is not connected yet">
                                             <span className="toggle-knob"></span>
                                         </button>
                                     </div>
