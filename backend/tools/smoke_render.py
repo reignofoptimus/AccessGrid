@@ -39,5 +39,6 @@ for size in [(640,360),(3000,2000)]:
 image=Image.new('RGB',(720,110),'white')
 font=ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',52)
 ImageDraw.Draw(image).text((20,20),'KL07AB1234',font=font,fill='black')
-assert ocr_plate(np.asarray(image))=='KL07AB1234'
+recognized=ocr_plate(np.asarray(image))
+assert recognized=='KL07AB1234', f'Synthetic OCR mismatch: {recognized!r}'
 print('PASS: readiness, PostgreSQL-backed login, zones, ONNX HTTP inference and real Tesseract OCR')

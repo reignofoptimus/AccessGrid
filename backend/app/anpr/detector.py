@@ -1,4 +1,4 @@
-﻿"""CPU ONNX inference: training dependencies are excluded from the serving image."""
+"""CPU ONNX inference: training dependencies are excluded from the serving image."""
 import os
 import re
 import shutil
@@ -94,6 +94,13 @@ def ocr_plate(crop):
     except RuntimeError as error:
         raise RecognitionTimeout('Plate reading timed out; try a smaller, clearer image') from error
     plate = re.sub(r'[^A-Z0-9]', '', value.upper())
+    # Correct common letter/digit OCR confusions only in the numeric positions
+    # of a recognized Indian registration layout; never alter series/state letters.
+    match=re.fullmatch(r'([A-Z]{2})([0-9OIZSB]{2})([A-Z]{1,3})([0-9OIZSB]{4})',plate)
+    if match:
+        digits=str.maketrans({'O':'0','I':'1','Z':'2','S':'5','B':'8'})
+        state,district,series,number=match.groups()
+        plate=state+district.translate(digits)+series+number.translate(digits)
     return plate if re.fullmatch(r'[A-Z0-9]{6,15}', plate) else None
 
 def detect_plate(image):

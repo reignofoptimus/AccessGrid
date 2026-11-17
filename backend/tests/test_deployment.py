@@ -88,6 +88,10 @@ class DetectorTests(unittest.TestCase):
         self.assertLessEqual(ocr.call_args.args[0].shape[1],960)
         self.assertEqual(ocr.call_args.kwargs['timeout'],5)
 
+    def test_ocr_corrects_only_numeric_positions(self):
+        with patch.object(detector.pytesseract,'image_to_string',return_value='KLO7ABI234'):
+            self.assertEqual(detector.ocr_plate(np.zeros((40,160,3),dtype=np.uint8)),'KL07AB1234')
+
     def test_ocr_timeout_is_explicit(self):
         with patch.object(detector.pytesseract,'image_to_string',side_effect=RuntimeError('timeout')):
             with self.assertRaises(detector.RecognitionTimeout):detector.ocr_plate(np.zeros((40,160,3),dtype=np.uint8))
