@@ -3,7 +3,7 @@ import { demoEnabled, demoAdapter } from './demo';
 
 const API = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
-  timeout: 12000,
+  timeout: 120000, // Allow the Render free service to wake; never auto-replay mutations.
   withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
   ...(demoEnabled ? { adapter: demoAdapter } : {}),

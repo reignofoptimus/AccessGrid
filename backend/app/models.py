@@ -95,3 +95,10 @@ class EntryLog(db.Model):
         'gate': self.gate_name,
         'image': self.image_path
     }
+
+
+class RateLimitBucket(db.Model):
+    __tablename__='rate_limit_bucket'
+    key=db.Column(db.String(64),primary_key=True)
+    count=db.Column(db.Integer,nullable=False)
+    expires=db.Column(db.BigInteger,nullable=False,index=True)

@@ -1,0 +1,54 @@
+name: Render backend
+on:
+  push:
+    paths: ['backend/**', 'render.yaml', '.github/workflows/render-backend.yml']
+  pull_request:
+    paths: ['backend/**', 'render.yaml', '.github/workflows/render-backend.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  linux-container:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build production image
+        run: docker build -t accessgrid-render backend
+      - name: Run isolated PostgreSQL
+        run: |
+          docker network create accessgrid-test
+          docker run -d --name database --network accessgrid-test -e POSTGRES_HOST_AUTH_METHOD=trust postgres:17
+          for attempt in $(seq 1 30); do
+            if docker exec database pg_isready -U postgres; then exit 0; fi
+            sleep 2
+          done
+          exit 1
+      - name: Start application with a 512 MB memory limit
+        run: |
+          docker run -d --name application --network accessgrid-test --memory=512m --memory-swap=512m \
+            -e DATABASE_URL=postgresql://postgres@database/postgres \
+            -e SECRET_KEY="$(openssl rand -hex 32)" \
+            -e BOOTSTRAP_ADMIN_USERNAME=ci-owner \
+            -e BOOTSTRAP_ADMIN_PASSWORD="$(openssl rand -hex 24)" \
+            accessgrid-render
+          for attempt in $(seq 1 60); do
+            if docker exec application python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:10000/readyz',timeout=3)"; then exit 0; fi
+            if [ "$(docker inspect -f '{{.State.Running}}' application)" != true ]; then break; fi
+            sleep 2
+          done
+          docker logs application
+          exit 1
+      - name: Real inference and OCR smoke test inside memory-limited container
+        run: docker exec application python -m tools.smoke_render
+      - name: Test idempotent startup and database migrations
+        run: |
+          docker exec application python deploy_init.py
+          docker run --rm --memory=512m --memory-swap=512m --network accessgrid-test --entrypoint python \
+            -e ACCESSGRID_PRODUCTION=0 accessgrid-render -m unittest discover -s tests -q
+      - name: Report container status
+        if: always()
+        run: |
+          docker logs application || true
+          docker inspect -f 'OOMKilled={{.State.OOMKilled}} ExitCode={{.State.ExitCode}}' application || true
+          docker stats --no-stream application || true

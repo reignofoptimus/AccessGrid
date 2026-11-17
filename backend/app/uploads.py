@@ -19,6 +19,7 @@ def read_image():
                     abort(400,description='Unsupported image dimensions or format')
                 image.verify()
             with Image.open(io.BytesIO(raw)) as image:
+                image.thumbnail((1600,1600))
                 return image.convert('RGB').copy()
     except (UnidentifiedImageError,OSError,ValueError,Image.DecompressionBombWarning,Image.DecompressionBombError):
         abort(400,description='Invalid image content')

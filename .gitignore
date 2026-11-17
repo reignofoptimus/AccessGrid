@@ -48,3 +48,6 @@ Desktop.ini
 # ====== Logs & Misc ======
 *.log
 seed_output.txt
+
+# Isolated deployment/export environments
+.render-*/

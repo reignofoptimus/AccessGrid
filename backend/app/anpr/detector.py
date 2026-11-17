@@ -1,80 +1,110 @@
-import cv2
-import pytesseract
-import re
+﻿"""CPU ONNX inference: training dependencies are excluded from the serving image."""
 import os
+import re
+import shutil
+from pathlib import Path
+from threading import Lock
+import cv2
+import numpy as np
+import pytesseract
 
-try:
-    from ultralytics import YOLO
-    _cur_dir = os.path.dirname(os.path.abspath(__file__))
-    _model_path = os.path.join(_cur_dir, "best.pt")
-    model = YOLO(_model_path) if os.path.exists(_model_path) else None
-except Exception as e:
-    print(f"ANPR YOLO init note: {e}")
-    model = None
+cv2.setNumThreads(1)
+_session = None
+_load_lock = Lock()
 
-# Optional tesseract path if standard location exists
-if os.path.exists(r"C:\Program Files\Tesseract-OCR\tesseract.exe"):
-    pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+class RecognitionUnavailable(RuntimeError):
+    pass
 
-def clean_plate(text):
-    text = text.upper()
-    text = re.sub(r'[^A-Z0-9]', '', text)
+class RecognitionTimeout(RuntimeError):
+    pass
 
-    chars = list(text)
+def get_session():
+    global _session
+    with _load_lock:
+        if _session is None:
+            path = Path(os.environ.get('ANPR_MODEL_PATH', str(Path(__file__).with_name('best.onnx'))))
+            if not path.is_file():
+                raise RecognitionUnavailable('ANPR model is missing')
+            if not shutil.which('tesseract'):
+                raise RecognitionUnavailable('Tesseract is not installed')
+            try:
+                import onnxruntime as ort
+                options = ort.SessionOptions()
+                options.intra_op_num_threads = 1
+                options.inter_op_num_threads = 1
+                options.enable_cpu_mem_arena = False
+                options.enable_mem_pattern = False
+                options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_BASIC
+                session = ort.InferenceSession(str(path), sess_options=options, providers=['CPUExecutionProvider'])
+                if session.get_inputs()[0].shape != [1, 3, 640, 640]:
+                    raise ValueError('Expected fixed 640px detector input')
+                session.run(None, {session.get_inputs()[0].name: np.zeros((1, 3, 640, 640), dtype=np.float32)})
+                _session = session
+            except Exception as error:
+                raise RecognitionUnavailable('ANPR model could not be initialized') from error
+    return _session
 
-    for i, c in enumerate(chars):
-        if i < 2:
-            if c == '1':
-                chars[i] = 'I'
-            if c == '0':
-                chars[i] = 'O'
-            if c == 'I':
-                chars[i] = 'H'
-        elif 2 <= i < 4:
-            corrections = {'O':'0','I':'1','Z':'2','S':'5','B':'8','G':'6','T':'7'}
-            if c in corrections:
-                chars[i] = corrections[c]
-        elif 4 <= i < 6:
-            if c == '0':
-                chars[i] = 'O'
-            if c == '1':
-                chars[i] = 'I'
-        else:
-            corrections = {'O':'0','I':'1','Z':'2','S':'5','B':'8','G':'6','T':'7'}
-            if c in corrections:
-                chars[i] = corrections[c]
+def letterbox(image):
+    height, width = image.shape[:2]
+    ratio = min(640 / width, 640 / height)
+    resized = cv2.resize(image, (round(width * ratio), round(height * ratio)))
+    left = (640 - resized.shape[1]) // 2
+    top = (640 - resized.shape[0]) // 2
+    canvas = np.full((640, 640, 3), 114, dtype=np.uint8)
+    canvas[top:top + resized.shape[0], left:left + resized.shape[1]] = resized
+    tensor = np.ascontiguousarray(canvas.transpose(2, 0, 1)[None], dtype=np.float32) / 255.0
+    return tensor, ratio, left, top
 
-    return "".join(chars)
+def decode_boxes(output, ratio, left, top, width, height):
+    # YOLOv8 single-class raw export: cx, cy, width, height, class confidence.
+    predictions = np.asarray(output)[0]
+    if predictions.ndim != 2 or predictions.shape[0] != 5:
+        raise RecognitionUnavailable('Unsupported detector output')
+    rows = predictions.T
+    rows = rows[np.isfinite(rows).all(axis=1) & (rows[:, 4] >= 0.35)]
+    rows = rows[np.argsort(-rows[:, 4])[:100]]
+    boxes, scores = [], []
+    for cx, cy, w, h, score in rows:
+        if w > 0 and h > 0:
+            boxes.append([float((cx-w/2-left)/ratio), float((cy-h/2-top)/ratio), float(w/ratio), float(h/ratio)])
+            scores.append(float(score))
+    if not boxes:
+        return []
+    selected = np.asarray(cv2.dnn.NMSBoxes(boxes, scores, 0.35, 0.45)).flatten()
+    result = []
+    for index in selected:
+        x, y, w, h = boxes[int(index)]
+        pad = max(2, min(12, h * 0.1))
+        box = (max(0, int(x-pad)), max(0, int(y-pad)), min(width, int(x+w+pad)), min(height, int(y+h+pad)))
+        if box[2] > box[0] and box[3] > box[1]:
+            result.append(box)
+    return result
+
+def ocr_plate(crop):
+    gray = cv2.cvtColor(crop, cv2.COLOR_RGB2GRAY)
+    h, w = gray.shape
+    scale = min(4.0, 960 / w, 256 / h)
+    gray = cv2.resize(gray, (max(1, round(w*scale)), max(1, round(h*scale))), interpolation=cv2.INTER_CUBIC)
+    gray = cv2.bilateralFilter(gray, 7, 17, 17)
+    _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    try:
+        value = pytesseract.image_to_string(binary, lang='eng', config='--psm 7 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', timeout=5)
+    except pytesseract.TesseractNotFoundError as error:
+        raise RecognitionUnavailable('Tesseract is not installed') from error
+    except RuntimeError as error:
+        raise RecognitionTimeout('Plate reading timed out; try a smaller, clearer image') from error
+    plate = re.sub(r'[^A-Z0-9]', '', value.upper())
+    return plate if re.fullmatch(r'[A-Z0-9]{6,15}', plate) else None
 
 def detect_plate(image):
-    if model is None:
-        print("YOLO model not loaded")
+    session = get_session()
+    image = image.convert('RGB')
+    image.thumbnail((1600, 1600))
+    pixels = np.asarray(image)
+    tensor, ratio, left, top = letterbox(pixels)
+    output = session.run(None, {session.get_inputs()[0].name: tensor})[0]
+    boxes = decode_boxes(output, ratio, left, top, image.width, image.height)
+    if not boxes:
         return None
-    try:
-        results = model(image)
-        boxes = results[0].boxes.xyxy
-
-        if len(boxes) == 0:
-            print("No license plate detected")
-            return None
-
-        x1, y1, x2, y2 = map(int, boxes[0])
-        padding = 20
-        x1 = max(0, x1 - padding)
-        y1 = max(0, y1 - padding)
-        x2 = min(image.shape[1], x2 + padding)
-        y2 = min(image.shape[0], y2 + padding)
-        plate = image[y1:y2, x1:x2]
-        plate = cv2.resize(plate, None, fx=4, fy=4, interpolation=cv2.INTER_CUBIC)
-        gray = cv2.cvtColor(plate, cv2.COLOR_BGR2GRAY)
-        gray = cv2.bilateralFilter(gray, 11, 17, 17)
-        _, thresh = cv2.threshold(gray, 120, 255, cv2.THRESH_BINARY)
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
-        thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
-        text = pytesseract.image_to_string(thresh, config='--psm 7 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789')
-        text = clean_plate(text)
-        print("License Plate:", text)
-        return text
-    except Exception as err:
-        print(f"ANPR detection error: {err}")
-        return None
+    x1, y1, x2, y2 = boxes[0]
+    return ocr_plate(pixels[y1:y2, x1:x2])

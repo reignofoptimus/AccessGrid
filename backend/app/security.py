@@ -1,9 +1,6 @@
-from contextlib import closing
 import hashlib
 import hmac
-import os
 import secrets
-import sqlite3
 import time
 from flask import current_app, request, session, abort
 from flask_login import current_user
@@ -16,19 +13,23 @@ def csrf_token():
 
 
 def throttle(key, maximum, seconds):
-    # Shared across local workers/restarts, with atomic increments; never trust X-Forwarded-For.
-    path = current_app.config['RATE_LIMIT_DB']
-    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
-    now = int(time.time())
-    key = hashlib.sha256(key.encode()).hexdigest()
-    with closing(sqlite3.connect(path, timeout=5)) as conn, conn:
-        conn.execute('CREATE TABLE IF NOT EXISTS limits (key TEXT PRIMARY KEY, count INTEGER, expires INTEGER)')
-        conn.execute('BEGIN IMMEDIATE')
-        conn.execute('DELETE FROM limits WHERE expires <= ?', (now,))
-        row = conn.execute('SELECT count FROM limits WHERE key=?', (key,)).fetchone()
-        if row and row[0] >= maximum:
-            abort(429, description='Too many requests. Try again later.')
-        conn.execute('INSERT INTO limits VALUES (?,1,?) ON CONFLICT(key) DO UPDATE SET count=count+1', (key, now+seconds))
+    # Atomic counters share the application database and survive Render restarts.
+    from app import db
+    from app.models import RateLimitBucket
+    from sqlalchemy import delete
+    from sqlalchemy.dialects.postgresql import insert as pg_insert
+    from sqlalchemy.dialects.sqlite import insert as sqlite_insert
+    now=int(time.time())
+    key=hashlib.sha256((key+':'+str(now//seconds)).encode()).hexdigest()
+    insert=pg_insert if db.engine.dialect.name=='postgresql' else sqlite_insert
+    table=RateLimitBucket.__table__
+    stmt=insert(table).values(key=key,count=1,expires=(now//seconds+1)*seconds)
+    stmt=stmt.on_conflict_do_update(index_elements=[table.c.key],set_={'count':table.c.count+1},where=table.c.count<maximum).returning(table.c.count)
+    with db.engine.begin() as conn:
+        conn.execute(delete(table).where(table.c.expires<=now))
+        count=conn.execute(stmt).scalar()
+    if count is None:
+        abort(429,description='Too many requests. Try again later.')
 
 
 def protect_api():

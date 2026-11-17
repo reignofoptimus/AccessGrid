@@ -56,7 +56,7 @@ def create_app(config_class=Config):
 
     from app.routes.vehicles import bp as vehicles_bp
     app.register_blueprint(vehicles_bp, url_prefix='/api/vehicles')
-    
+
     from app.routes.gate import bp as gate_bp
     app.register_blueprint(gate_bp, url_prefix='/api/gate')
 
@@ -68,6 +68,9 @@ def create_app(config_class=Config):
 
     from app.routes.anpr_routes import anpr_bp
     app.register_blueprint(anpr_bp, url_prefix='/api/anpr')
+
+    from app.health import bp as health_bp
+    app.register_blueprint(health_bp)
 
     from app.commands import register_commands
     register_commands(app)
