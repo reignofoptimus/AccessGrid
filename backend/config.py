@@ -7,9 +7,13 @@ from dotenv import load_dotenv
 basedir=Path(__file__).resolve().parent
 load_dotenv(basedir/'.env')
 production=os.environ.get('ACCESSGRID_PRODUCTION')=='1'
-database_url=os.environ.get('DATABASE_URL','')
-if database_url.startswith('postgres://'):
-    database_url='postgresql://'+database_url[len('postgres://'):]
+def normalize_database_url(value):
+    for prefix in ('postgres://','postgresql://'):
+        if value.startswith(prefix):
+            return 'postgresql+psycopg2://'+value[len(prefix):]
+    return value
+
+database_url=normalize_database_url(os.environ.get('DATABASE_URL',''))
 if production and not database_url:
     raise RuntimeError('Production requires DATABASE_URL for persistent storage')
 

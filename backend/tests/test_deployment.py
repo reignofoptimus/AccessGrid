@@ -50,6 +50,14 @@ class DeploymentTests(unittest.TestCase):
             with self.assertRaises(TooManyRequests):throttle('persistent',1,60)
             db.session.remove();db.engine.dispose()
 
+    def test_postgres_url_uses_installed_driver(self):
+        from config import normalize_database_url
+        from sqlalchemy import create_engine
+        for value in ['postgres://unused@localhost/example','postgresql://unused@localhost/example']:
+            engine=create_engine(normalize_database_url(value))
+            self.assertEqual(engine.dialect.driver,'psycopg2')
+            engine.dispose()
+
     def test_health_does_not_require_login(self):
         response=self.app.test_client().get('/healthz')
         self.assertEqual(response.status_code,200)
