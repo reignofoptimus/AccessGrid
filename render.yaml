@@ -1,9 +1,10 @@
-# Creates one free backend. Supply a persistent PostgreSQL connection separately.
+# Creates a backend and its own private PostgreSQL database together.
 services:
   - type: web
     name: accessgrid-api
     runtime: docker
     plan: free
+    region: oregon
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
     healthCheckPath: /healthz
@@ -13,10 +14,19 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: accessgrid-db
+          property: connectionString
       - key: BOOTSTRAP_ADMIN_USERNAME
         sync: false
       - key: BOOTSTRAP_ADMIN_PASSWORD
         sync: false
-      - key: CORS_ORIGINS
-        sync: false
+
+databases:
+  - name: accessgrid-db
+    plan: free
+    region: oregon
+    postgresMajorVersion: "18"
+    databaseName: accessgrid
+    user: accessgrid
+    ipAllowList: []

@@ -18,7 +18,7 @@ jobs:
       - name: Run isolated PostgreSQL
         run: |
           docker network create accessgrid-test
-          docker run -d --name database --network accessgrid-test -e POSTGRES_HOST_AUTH_METHOD=trust postgres:17
+          docker run -d --name database --network accessgrid-test -e POSTGRES_HOST_AUTH_METHOD=trust postgres:18
           for attempt in $(seq 1 30); do
             if docker exec database pg_isready -U postgres; then exit 0; fi
             sleep 2
