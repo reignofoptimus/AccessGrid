@@ -1,0 +1,22 @@
+# Alternative for workspaces whose free Render database slot is already occupied.
+# Creates only AccessGrid's backend; DATABASE_URL comes from a separate Neon project.
+services:
+  - type: web
+    name: accessgrid-api
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /healthz
+    envVars:
+      - key: ACCESSGRID_PRODUCTION
+        value: "1"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: BOOTSTRAP_ADMIN_USERNAME
+        sync: false
+      - key: BOOTSTRAP_ADMIN_PASSWORD
+        sync: false
