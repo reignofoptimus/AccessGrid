@@ -1,34 +1,19 @@
 import { useState } from 'react'
 import { login } from '../api/api'
-import { demoEnabled } from '../api/demo'
+import DemoPicker from './DemoPicker'
 import Icon from '../ui/Icon'
 import { Brand, Button, Notice, Plate } from '../ui/shared'
 
-const ROLES = [
-  { role: 'admin', label: 'Admin', icon: 'overview' },
-  { role: 'security', label: 'Security', icon: 'shield' },
-  { role: 'student', label: 'Student', icon: 'user' },
-]
-
 export default function Login({ onLogin }) {
-  const [username, setUsername] = useState(demoEnabled ? 'admin' : '')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [visible, setVisible] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const [selectedRole, setSelectedRole] = useState(demoEnabled ? 'admin' : '')
-
-  function chooseRole(r) {
-    setSelectedRole(r.role)
-    setUsername(r.role)
-    setPassword('')
-    setError('')
-  }
-
   async function submit(event) {
     event.preventDefault()
     const cleanUser = username.trim()
-    if (!cleanUser || (!demoEnabled && !password)) {
+    if (!cleanUser || !password) {
       setError('Enter your username and password to continue.')
       return
     }
@@ -108,7 +93,7 @@ export default function Login({ onLogin }) {
         </div>
 
         <div className="login-intro-footer">
-          <span>Vehicle registration Â· Gate control Â· Parking</span>
+          <span>Vehicle registration / Gate control / Parking</span>
           <span>AccessGrid</span>
         </div>
       </section>
@@ -122,21 +107,11 @@ export default function Login({ onLogin }) {
           </div>
 
           <h2>Welcome to AccessGrid</h2>
-          <p className="login-subheading">{demoEnabled ? 'Choose a sample role. No password needed.' : 'Sign in to your campus workspace.'}</p>
-
-          {demoEnabled && <div className="demo-account-picker" aria-label="Select demo role">
-            {ROLES.map((r) => (
-              <button
-                key={r.role}
-                type="button"
-                className={selectedRole === r.role ? 'selected' : ''}
-                onClick={() => chooseRole(r)}
-              >
-                <Icon name={r.icon} size={16} />
-                <span>{r.label}</span>
-              </button>
-            ))}
-          </div>}
+          <p className="login-subheading">Choose a workspace and explore. No password needed.</p>
+          <DemoPicker />
+          <p className="demo-access-note">Sample data. Changes reset on refresh.</p>
+          <details className="campus-signin">
+            <summary>Campus account sign-in</summary>
 
           {error && <Notice error>{error}</Notice>}
 
@@ -161,7 +136,7 @@ export default function Login({ onLogin }) {
               </div>
             </label>
 
-            {!demoEnabled && <label className="field" htmlFor="password">
+            <label className="field" htmlFor="password">
               Password
               <div className="input-with-icon">
                 <Icon name="lock" size={16} />
@@ -187,7 +162,7 @@ export default function Login({ onLogin }) {
                   <Icon name={visible ? 'eyeOff' : 'eye'} size={16} />
                 </button>
               </div>
-            </label>}
+            </label>
 
             <Button
               type="submit"
@@ -196,13 +171,14 @@ export default function Login({ onLogin }) {
               disabled={busy}
               icon={busy ? 'clock' : 'arrow'}
             >
-              {busy ? 'Signing inâ€¦' : 'Sign in to workspace'}
+              {busy ? 'Signing in...' : 'Sign in to workspace'}
             </Button>
           </form>
+          </details>
         </div>
 
         <div className="login-form-footer">
-          <span>AccessGrid Â· FISAT campus</span>
+          <span>AccessGrid / FISAT campus</span>
           <span>Gate control system</span>
         </div>
       </section>

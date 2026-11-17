@@ -1,11 +1,12 @@
-// Explicit, development-only preview. No requests reach the real backend.
-export const demoEnabled = import.meta.env.DEV && new URLSearchParams(window.location.search).has('demo');
+// Public showcase uses isolated sample data. It never grants a server session.
+const selectedDemo = new URLSearchParams(window.location.search).get('demo');
+export const demoEnabled = ['admin', 'security', 'student'].includes(selectedDemo);
 export const demoUsers = {
   admin: { id: 1, username: 'admin', role: 'admin', name: 'Sample Administrator', department: 'Administration' },
   security: { id: 2, username: 'security', role: 'security', name: 'Sample Security Operator', department: 'Security' },
   student: { id: 3, username: 'student', role: 'student', name: 'Sample Student', department: 'Computer Science', studentId: 'DEMO-STUDENT-001' },
 };
-export const demoUser = demoEnabled ? demoUsers[new URLSearchParams(window.location.search).get('demo')] : null;
+export const demoUser = demoEnabled ? demoUsers[selectedDemo] : null;
 
 let vehicles = [
   { id: 1, plate: 'KL-07-AB-1234', type: 'Staff', owner: 'Sample Administrator', ownerId: 1, department: 'Computer Science', status: 'active', isInside: true },

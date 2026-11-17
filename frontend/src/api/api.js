@@ -23,7 +23,7 @@ API.interceptors.response.use(response => response, error => {
   }
   return Promise.reject(error);
 });
-export const getCurrentUser = () => API.get('/auth/me');
+export const getCurrentUser = (config) => API.get('/auth/me', config);
 export const logout = () => demoEnabled ? Promise.resolve() : API.post('/auth/logout');
 
 // ── Auth ──────────────────────────────────────────────
