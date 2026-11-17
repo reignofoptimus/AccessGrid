@@ -40,6 +40,25 @@ class SecurityTests(unittest.TestCase):
             self.assertEqual(self.client.get(path).status_code,401,path)
         for path in ['/api/gate/entry','/api/gate/exit','/api/anpr/','/api/gate/scan','/api/auth/register','/api/vehicles/']:
             self.assertEqual(self.post(path,{}).status_code,401,path)
+    def test_proxy_normalized_routes_do_not_redirect(self):
+        for path in ['/api/vehicles', '/api/vehicles/', '/api/anpr', '/api/anpr/']:
+            response = self.client.get(path) if 'vehicles' in path else self.post(path, {})
+            self.assertEqual(response.status_code, 401, path)
+            self.assertNotIn('Location', response.headers)
+        self.login()
+        for path in ['/api/vehicles', '/api/vehicles/']:
+            response = self.client.get(path)
+            self.assertEqual(response.status_code, 200, path)
+            self.assertEqual(len(response.json), 2)
+            self.assertNotIn('Location', response.headers)
+        response = self.post('/api/vehicles', {'plate': 'KL07EF9012', 'owner': 'Visitor', 'type': 'Visitor'})
+        self.assertEqual(response.status_code, 201)
+        self.assertNotIn('Location', response.headers)
+        buf = io.BytesIO()
+        Image.new('RGB', (12, 12)).save(buf, format='PNG')
+        response = self.upload(buf.getvalue(), path='/api/anpr')
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn('Location', response.headers)
     def test_csrf_enforced_even_for_login(self):
         self.assertEqual(self.client.post('/api/auth/login',json={}).status_code,403)
         self.login()

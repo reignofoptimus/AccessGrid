@@ -35,10 +35,10 @@ export const register = (data) =>
 
 // ── Vehicles ──────────────────────────────────────────
 export const getVehicles = () =>
-  API.get('/vehicles/');
+  API.get('/vehicles');
 
 export const addVehicle = (data) =>
-  API.post('/vehicles/', data);
+  API.post('/vehicles', data);
 
 export const getVehicleByPlate = async (plate) => {
   // The supplied backend exposes the registry, but no per-plate endpoint.
@@ -79,7 +79,7 @@ export const detectPlate = async (file) => {
   const formData = new FormData();
   formData.append("image", file);
 
-  const response = await API.post('/anpr/',
+  const response = await API.post('/anpr',
     formData,
     {
       headers: { 'Content-Type': 'multipart/form-data' },

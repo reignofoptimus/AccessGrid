@@ -25,6 +25,7 @@ assert request('/readyz')['status']=='ok'
 token=request('/api/auth/csrf')['csrfToken']
 request('/api/auth/login',json.dumps({'username':os.environ['BOOTSTRAP_ADMIN_USERNAME'],'password':os.environ['BOOTSTRAP_ADMIN_PASSWORD']}).encode(),{'Content-Type':'application/json','X-CSRF-Token':token})
 assert request('/api/auth/me')['role']=='admin'
+assert isinstance(request('/api/vehicles'),list)
 assert len(request('/api/parking/zones'))==4
 
 # Exercise the real trained detector via authenticated HTTP, including large-image downsampling.
@@ -33,7 +34,7 @@ for size in [(640,360),(3000,2000)]:
     boundary=uuid.uuid4().hex
     payload=(f'--{boundary}\r\nContent-Disposition: form-data; name="image"; filename="blank.jpg"\r\nContent-Type: image/jpeg\r\n\r\n').encode()+buffer.getvalue()+f'\r\n--{boundary}--\r\n'.encode()
     token=request('/api/auth/csrf')['csrfToken']
-    assert request('/api/anpr/',payload,{'Content-Type':'multipart/form-data; boundary='+boundary,'X-CSRF-Token':token})['plate'] is None
+    assert request('/api/anpr',payload,{'Content-Type':'multipart/form-data; boundary='+boundary,'X-CSRF-Token':token})['plate'] is None
 
 # Exercise the actual Tesseract executable, not a mock.
 image=Image.new('RGB',(720,110),'white')
