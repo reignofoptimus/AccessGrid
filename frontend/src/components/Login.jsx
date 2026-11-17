@@ -58,16 +58,8 @@ export default function Login({ onLogin }) {
             </div>
           </div>
 
-          <div className="scene-marker">
-            <Icon name="entry" size={14} />
-            <span>Campus access</span>
-          </div>
         </div>
 
-        <div className="login-intro-footer">
-          <span>Vehicle registration / Gate control / Parking</span>
-          <span>AccessGrid</span>
-        </div>
       </section>
 
       <section className="login-form-region">
@@ -85,14 +77,14 @@ export default function Login({ onLogin }) {
               Username
               <div className="input-with-icon">
                 <Icon name="user" size={16} />
-                <input id="username" value={selectedRole} readOnly autoComplete="off" aria-describedby="showcase-access-note" />
+                <input id="username" value={selectedRole} readOnly autoComplete="off" />
               </div>
             </label>
             <label className="field" htmlFor="password">
               Access key
               <div className="input-with-icon">
                 <Icon name="lock" size={16} />
-                <input id="password" type="password" value="showcase-access" readOnly autoComplete="off" aria-describedby="showcase-access-note" />
+                <input id="password" type="password" value="showcase-access" readOnly autoComplete="off" />
               </div>
             </label>
 
@@ -108,14 +100,9 @@ export default function Login({ onLogin }) {
           <div className="quick-access">
             <p>Quick workspace access</p>
             <DemoPicker selectedRole={selectedRole} onSelect={setSelectedRole} />
-            <small id="showcase-access-note">Choose a role, then sign in. Sample campus data.</small>
           </div>
         </div>
 
-        <div className="login-form-footer">
-          <span>AccessGrid / FISAT campus</span>
-          <span>Gate control system</span>
-        </div>
       </section>
     </main>
   )
