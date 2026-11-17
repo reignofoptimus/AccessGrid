@@ -11,6 +11,8 @@
   <img src="https://img.shields.io/badge/Tesseract-OCR-3DDC84?logo=google&logoColor=white" />
 </p>
 
+**Hosting:** [Render deployment guide](RENDER-DEPLOY.md) ? [Backend validation](https://github.com/reignofoptimus/AccessGrid/actions/workflows/render-backend.yml)
+
 ---
 
 ## 📖 About
@@ -33,15 +35,15 @@ The system features role-based dashboards for **Admins**, **Security personnel**
 ### 🛡️ Role-Based Dashboards
 | Role | Capabilities |
 |------|-------------|
-| **Admin** | Register vehicles, manage parking zones, view analytics & statistics, dark/light theme |
+| **Admin** | Register vehicles, manage parking zones, view analytics & statistics, dark interface |
 | **Security** | Scan plates via ANPR or manual entry, allow/deny entry/exit, real-time gate logs |
 | **Student** | View personal vehicle status, entry/exit history, campus parking map |
 
 ### 🏗️ System Highlights
-- JWT-based authentication with role-based access control
+- Server-verified cookie sessions with CSRF protection and role-based access control
 - Real-time activity feed for gate events
 - Parking zone management with capacity tracking
-- Dark / Light theme toggle
+- Responsive dark interface
 - One-click setup & launch scripts (`.bat` files)
 - PWA support via Vite PWA plugin
 
@@ -54,8 +56,8 @@ The system features role-based dashboards for **Admins**, **Security personnel**
 | **Frontend** | React 19, Vite 7, Axios |
 | **Backend** | Python, Flask, Flask-SQLAlchemy, Flask-Login |
 | **Database** | PostgreSQL |
-| **ANPR Model** | YOLOv8 (Ultralytics), OpenCV, Tesseract OCR |
-| **Auth** | JWT (PyJWT), Werkzeug password hashing |
+| **ANPR Model** | YOLOv8 exported to ONNX Runtime CPU, OpenCV, Tesseract OCR |
+| **Auth** | Flask-Login sessions, Werkzeug password hashing |
 
 ---
 

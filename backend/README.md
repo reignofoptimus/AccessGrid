@@ -1,27 +1,24 @@
-# AccessGrid Backend Setup
+﻿# AccessGrid backend
 
-## Prerequisites
-1.  **Python** (3.8 or higher) must be installed and added to PATH.
-2.  **PostgreSQL** should be running.
-3.  **Tesseract OCR** must be installed for License Plate Recognition to work.
-    -   Download from: https://github.com/UB-Mannheim/tesseract/wiki
-    -   Update the path in `backend/app/utils/ocr.py` if it's not in `C:\Program Files\Tesseract-OCR\tesseract.exe`.
+For Render hosting, follow [RENDER-DEPLOY.md](../RENDER-DEPLOY.md). The root `render.yaml` builds `backend/Dockerfile` and supplies the production startup configuration.
 
-## Configuration
-1.  Creates a `.env` file in the `backend` folder if you want to configure specific settings:
-    ```
-    DATABASE_URL=postgresql://postgres:password@localhost/accessgrid
-    SECRET_KEY=your-secret-key
-    ```
-    *If no .env is provided, it defaults to a local SQLite database for easy testing (`accessgrid.db`).*
+## Production runtime
 
-## Running
-1.  Run `setup_backend.bat` first (once) to install dependencies and set up the database.
-    -   Note: This will perform database migrations.
-2.  Run `run_server.bat` to start the Flask API.
-    -   The server will run at `http://localhost:5000`.
+- Python 3.13, Flask, Gunicorn and PostgreSQL.
+- CPU ONNX Runtime loads the bundled `app/anpr/best.onnx`; PyTorch is not needed in the serving container.
+- Tesseract OCR and English language data are installed by Docker.
+- `start.sh` applies migrations, provisions the first admin/parking zones idempotently, then starts the web worker on `$PORT`.
+- Private environment variables: `ACCESSGRID_PRODUCTION=1`, `DATABASE_URL`, stable `SECRET_KEY`, and first-deploy `BOOTSTRAP_ADMIN_USERNAME` / `BOOTSTRAP_ADMIN_PASSWORD`.
+- `/healthz` checks database connectivity. `/readyz` additionally checks detector initialization.
 
-## API Endpoints
--   Auth: `POST /api/auth/login`
--   Vehicles: `GET /api/vehicles`
--   Gate: `POST /api/gate/scan` (Upload image key 'image')
+## Local setup
+
+Use a fresh virtual environment and `pip install -r requirements.txt`. Install the Tesseract executable separately for your operating system and make it available on PATH. Run `flask --app run db upgrade`, then `flask --app run create-user` to provision an account privately. `python run.py` starts the development API on loopback port 5000; it is not the production server.
+
+For an existing local SQLite database created without migrations, back it up and migrate deliberately; do not run destructive seed scripts against real data. Render should start with a fresh managed PostgreSQL database.
+
+## Tests
+
+From this directory: `python -m unittest discover -s tests -q`.
+
+The **Render backend** GitHub Actions workflow builds the real Linux image, runs PostgreSQL-backed startup under a 512 MB container limit, tests authenticated ONNX inference and real Tesseract OCR, and verifies the security regression suite. No database or deployment credentials are stored in the repository.
