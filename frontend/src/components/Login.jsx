@@ -1,46 +1,18 @@
 import { useState } from 'react'
-import { login } from '../api/api'
+import { enterDemo } from '../api/demo'
 import DemoPicker from './DemoPicker'
 import Icon from '../ui/Icon'
-import { Brand, Button, Notice, Plate } from '../ui/shared'
+import { Brand, Button, Plate } from '../ui/shared'
 
 export default function Login({ onLogin }) {
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [visible, setVisible] = useState(false)
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState('')
-  async function submit(event) {
+  const [selectedRole, setSelectedRole] = useState('admin')
+  function submit(event) {
     event.preventDefault()
-    const cleanUser = username.trim()
-    if (!cleanUser || !password) {
-      setError('Enter your username and password to continue.')
-      return
-    }
-
-    setBusy(true)
-    setError('')
-
-    try {
-      const { data } = await login(cleanUser, password)
-      if (!['admin', 'security', 'student'].includes(data.role)) {
-        throw new Error('Your account does not have a supported workspace role.')
-      }
-      onLogin(data)
-    } catch (err) {
-      setError(
-        err.response?.data?.error ||
-        (err.code === 'ERR_NETWORK' || err.code === 'ECONNABORTED' || err.response?.status >= 500
-          ? 'Campus server connection failed. Make sure the backend is running.'
-          : err.message || 'Invalid username or password.')
-      )
-    } finally {
-      setBusy(false)
-    }
+    onLogin(enterDemo(selectedRole))
   }
 
   return (
-    <main id="main-content" className="login-page">
+    <main id="main-content" className="login-page showcase-login">
       <section className="login-introduction" aria-label="About AccessGrid">
         <div className="login-brand-row">
           <Brand />
@@ -107,60 +79,20 @@ export default function Login({ onLogin }) {
           </div>
 
           <h2>Welcome to AccessGrid</h2>
-          <p className="login-subheading">Choose a workspace and explore. No password needed.</p>
-          <DemoPicker />
-          <p className="demo-access-note">Sample data. Changes reset on refresh.</p>
-          <details className="campus-signin">
-            <summary>Campus account sign-in</summary>
-
-          {error && <Notice error>{error}</Notice>}
-
+          <p className="login-subheading">Your campus workspace, one sign-in away.</p>
           <form className="signin-form" onSubmit={submit}>
             <label className="field" htmlFor="username">
               Username
               <div className="input-with-icon">
                 <Icon name="user" size={16} />
-                <input
-                  id="username"
-                  autoComplete="username"
-                  placeholder="Enter your username"
-                  value={username}
-                  onChange={(e) => {
-                    setUsername(e.target.value)
-                    setError('')
-                  }}
-                  required
-                  maxLength={64}
-                  disabled={busy}
-                />
+                <input id="username" value={selectedRole} readOnly autoComplete="off" aria-describedby="showcase-access-note" />
               </div>
             </label>
-
             <label className="field" htmlFor="password">
-              Password
+              Access key
               <div className="input-with-icon">
                 <Icon name="lock" size={16} />
-                <input
-                  id="password"
-                  type={visible ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value)
-                    setError('')
-                  }}
-                  required
-                  disabled={busy}
-                />
-                <button
-                  type="button"
-                  className="password-reveal"
-                  onClick={() => setVisible(!visible)}
-                  aria-label={visible ? 'Hide password' : 'Show password'}
-                >
-                  <Icon name={visible ? 'eyeOff' : 'eye'} size={16} />
-                </button>
+                <input id="password" type="password" value="showcase-access" readOnly autoComplete="off" aria-describedby="showcase-access-note" />
               </div>
             </label>
 
@@ -168,13 +100,16 @@ export default function Login({ onLogin }) {
               type="submit"
               variant="primary"
               className="signin-button"
-              disabled={busy}
-              icon={busy ? 'clock' : 'arrow'}
+              icon="arrow"
             >
-              {busy ? 'Signing in...' : 'Sign in to workspace'}
+              Sign in to workspace
             </Button>
           </form>
-          </details>
+          <div className="quick-access">
+            <p>Quick workspace access</p>
+            <DemoPicker selectedRole={selectedRole} onSelect={setSelectedRole} />
+            <small id="showcase-access-note">Choose a role, then sign in. Sample campus data.</small>
+          </div>
         </div>
 
         <div className="login-form-footer">

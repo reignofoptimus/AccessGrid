@@ -38,3 +38,18 @@ test('demo gate actions update sample data and a fresh visit resets it', async (
   assert.equal(reset.data[0].isInside, true)
   assert.equal(reset.data[0].owner, 'Sample Administrator')
 })
+
+test('sign-in and sign-out switch sample mode without navigation or server credentials', async () => {
+  const demo = await openDemo('')
+  assert.equal(demo.demoEnabled, false)
+  for (const role of ['admin', 'security', 'student']) {
+    const account = demo.enterDemo(role)
+    assert.equal(account.role, role)
+    assert.equal(demo.demoEnabled, true)
+    assert.equal(demo.demoUser, account)
+    demo.leaveDemo()
+    assert.equal(demo.demoEnabled, false)
+    assert.equal(demo.demoUser, null)
+  }
+  assert.throws(() => demo.enterDemo('root'))
+})

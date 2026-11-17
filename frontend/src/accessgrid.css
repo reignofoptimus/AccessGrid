@@ -953,3 +953,23 @@ input::placeholder{color:var(--muted);opacity:.7}
   .login-page:has(.campus-signin[open]) .demo-access-note{margin-bottom:8px}
 }
 @media(max-width:380px){.preview-bar{padding:0 12px}.preview-bar a{padding:4px 8px}}
+
+/* Showcase sign-in: select an account below, then enter its workspace. */
+.quick-access{margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
+.quick-access>p{margin:0 0 12px;color:var(--secondary);font-size:12px;text-align:center}
+.quick-access .demo-account-picker{margin-bottom:10px}
+.quick-access .demo-account-picker button{min-height:64px;transition:background 180ms var(--ease),border-color 180ms var(--ease),transform 180ms var(--ease)}
+.quick-access .demo-account-picker button:active{transform:scale(.97)}
+.quick-access small{display:block;font-size:11px;color:var(--secondary);text-align:center}
+.showcase-login input[readonly]{cursor:default}
+.startup-demo>.button{margin-bottom:12px}
+@media(max-width:900px){
+  .showcase-login .login-introduction{padding:12px 24px;gap:8px}
+  .showcase-login .login-message{display:none}
+  .showcase-login .gate-scene{height:128px;min-height:128px}
+  .showcase-login .login-form-region{padding:16px 24px}
+  .showcase-login .quick-access{margin-top:18px;padding-top:14px}
+  .showcase-login .demo-account-picker button{min-height:44px}
+}
+@media(max-width:900px) and (max-height:650px){.showcase-login .gate-scene{display:none}.showcase-login .login-form-region{padding:12px 24px}.showcase-login .login-subheading{margin-bottom:10px}.showcase-login .quick-access{margin-top:12px;padding-top:10px}}
+@media(prefers-reduced-motion:reduce){.quick-access .demo-account-picker button{transition:none}.quick-access .demo-account-picker button:active{transform:none}}

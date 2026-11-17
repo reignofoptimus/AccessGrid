@@ -6,11 +6,11 @@ const API = axios.create({
   timeout: 120000, // Allow the Render free service to wake; never auto-replay mutations.
   withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
-  ...(demoEnabled ? { adapter: demoAdapter } : {}),
 });
 
 // Cookies authenticate the server; browser-stored profile data never grants access.
 API.interceptors.request.use(async config => {
+  if (demoEnabled) config.adapter = demoAdapter;
   if (!demoEnabled && !['get','head','options'].includes((config.method || 'get').toLowerCase())) {
     const { data } = await API.get('/auth/csrf');
     config.headers['X-CSRF-Token'] = data.csrfToken;

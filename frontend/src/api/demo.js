@@ -1,12 +1,12 @@
 // Public showcase uses isolated sample data. It never grants a server session.
 const selectedDemo = new URLSearchParams(window.location.search).get('demo');
-export const demoEnabled = ['admin', 'security', 'student'].includes(selectedDemo);
+export let demoEnabled = ['admin', 'security', 'student'].includes(selectedDemo);
 export const demoUsers = {
   admin: { id: 1, username: 'admin', role: 'admin', name: 'Sample Administrator', department: 'Administration' },
   security: { id: 2, username: 'security', role: 'security', name: 'Sample Security Operator', department: 'Security' },
   student: { id: 3, username: 'student', role: 'student', name: 'Sample Student', department: 'Computer Science', studentId: 'DEMO-STUDENT-001' },
 };
-export const demoUser = demoEnabled ? demoUsers[selectedDemo] : null;
+export let demoUser = demoEnabled ? demoUsers[selectedDemo] : null;
 
 let vehicles = [
   { id: 1, plate: 'KL-07-AB-1234', type: 'Staff', owner: 'Sample Administrator', ownerId: 1, department: 'Computer Science', status: 'active', isInside: true },
@@ -25,6 +25,22 @@ const makeLog = (vehicle, action, minutes, id) => ({ id, vehicleId: vehicle.id, 
 let logs = [makeLog(vehicles[4], 'entry', 20, 5), makeLog(vehicles[2], 'exit', 45, 4), makeLog(vehicles[1], 'entry', 60, 3), makeLog(vehicles[0], 'entry', 90, 2), makeLog(vehicles[2], 'entry', 180, 1)];
 const normalize = plate => plate.replace(/[^a-z0-9]/gi, '').toUpperCase();
 const stat = (title, value, icon) => ({ title, value: String(value), icon, change: '', trend: 'neutral' });
+const initialVehicles = structuredClone(vehicles);
+const initialLogs = structuredClone(logs);
+
+export function enterDemo(role) {
+  if (!Object.hasOwn(demoUsers, role)) throw new Error('Choose Admin, Security, or Student.');
+  vehicles = structuredClone(initialVehicles);
+  logs = structuredClone(initialLogs);
+  demoEnabled = true;
+  demoUser = demoUsers[role];
+  return demoUser;
+}
+
+export function leaveDemo() {
+  demoEnabled = false;
+  demoUser = null;
+}
 
 export async function demoAdapter(config) {
   const path = config.url.replace(/\/$/, '');
