@@ -15,16 +15,12 @@ export default function StartupScreen({ failed, onRetry, onContinue }) {
         <span className="startup-road" /><span className="startup-vehicle" /><span className="startup-barrier" />
       </div>
       <div role="status" aria-live="polite">
-        <h1>{failed ? 'The campus is taking a little longer.' : waiting ? 'Waking up the campus.' : 'Opening AccessGrid.'}</h1>
-        <p>{failed ? 'The server hasn’t responded yet. Try again, or continue to the showcase.' : waiting ? 'The server rests between visits. It may take about a minute to start.' : 'Connecting to your campus workspace.'}</p>
+        <h1>{failed ? 'Connection timed out.' : 'AccessGrid starting'}</h1>
+        {waiting && !failed && <p>This may take a moment.</p>}
       </div>
       {!failed && <div className="startup-track" aria-hidden="true"><span /></div>}
-      {failed && <Button onClick={onRetry} icon="arrow">Try connection again</Button>}
-      <div className="startup-demo">
-        <Button onClick={onContinue}>Continue to sign in</Button>
-        <p>The showcase is available while the server starts.</p>
-      </div>
+      {failed && <Button onClick={onRetry} icon="arrow">Try again</Button>}
+      {failed && <button className="startup-skip" onClick={onContinue}>Continue anyway</button>}
     </section>
-    <footer>Campus access, connected.</footer>
   </main>
 }
